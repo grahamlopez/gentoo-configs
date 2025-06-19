@@ -1,0 +1,3 @@
+sys-apps/systemd cryptsetup
+media-video/pipewire pipewire-alsa sound-server
+net-libs/nodejs npm

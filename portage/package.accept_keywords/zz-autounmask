@@ -1,0 +1,9 @@
+# package.accept_keywords# required by gui-libs/xdg-desktop-portal-hyprland-1.3.9-r1::guru
+# required by xdg-desktop-portal-hyprland (argument)
+=dev-cpp/sdbus-c++-2.0.0 ~amd64
+# required by hyprpaper (argument)
+=gui-apps/hyprpaper-0.7.5 ~amd64
+# required by xdg-desktop-portal-hyprland (argument)
+=gui-libs/xdg-desktop-portal-hyprland-1.3.9-r1 ~amd64
+# required by keyd (argument)
+=app-misc/keyd-2.5.0 ~amd64
