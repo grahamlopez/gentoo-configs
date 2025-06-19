@@ -1,3 +1,7 @@
+app-editors/vim -X -alsa
 sys-apps/systemd cryptsetup
+sys-kernel/linux-firmware savedconfig
 media-video/pipewire pipewire-alsa sound-server
+media-sound/alsa-tools -gtk
+media-sound/alsaplayer -gtk
 net-libs/nodejs npm
