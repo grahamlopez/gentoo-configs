@@ -12,7 +12,7 @@ using
 ## prepare disks
 
 - partition with fdisk
-  - 4GB type EFI System
+  - 1-2 GB type EFI System
   - remainder type Linux filesystem
 - set up encryption
   - cryptsetup luksFormat
@@ -29,9 +29,6 @@ using
   - copy DNS info
   - mount/bind filesystems
 - sync portage
-
-## configure system
-
 - set the profile (desktop/systemd)
 - set the timezone (defer if dual booting)
 - configure locales
@@ -49,6 +46,8 @@ using
 
 ## final configuration
 
+TODO:
+
 - emerge utilities
 - fstab
 - systemd
@@ -56,6 +55,7 @@ using
 
 ## boot into new install
 
+- systemd-machine-id-setup
 - systemd-firstboot --reset
 - systemd-firstboot --prompt
 - timedatectl set-local-rtc 1
@@ -70,7 +70,12 @@ using
 ## install compositor, terminal, browser
 
 - blacklist nouveau in `/etc/modprobe.d/blacklist.conf`
-- FIXME: automate `echo auto > /sys/bus/pci/devices/0000\:01\:00.0/power/control`
+-`echo auto > /sys/bus/pci/devices/0000\:01\:00.0/power/control`
+- to automate, write
+  ```
+  w /sys/bus/pci/devices/0000:01:00.0/power/control - - - - auto
+  ```
+  to `/etc/tmpfiles.d/nvidia-power.conf`
 
 ## configure pcloud via rclone
 
@@ -141,6 +146,8 @@ using
 
 # Future Enhancements
 
+- touchpad palm rejection for nvgen
+- power profiles and switching
 - external monitors in hyprland
 - telescope search icons in nvim for "disk" and see many squares and kanji
 - root dotfiles
