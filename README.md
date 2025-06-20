@@ -29,6 +29,9 @@ using
   - copy DNS info
   - mount/bind filesystems
 - sync portage
+  - set up portage to use git (https://wiki.gentoo.org/wiki/Portage_with_Git)
+    - do onetime stuff from that page to convert from rsync if needed
+    - `emaint sync` to synchronize all enabled repos (simialr to emerge --sync)
 - set the profile (desktop/systemd)
 - set the timezone (defer if dual booting)
 - configure locales
@@ -278,6 +281,7 @@ Test some icons and emoji here in the browser:
 
 - touchpad palm rejection for nvgen
 - power profiles and switching
+- define some useful package sets (https://wiki.gentoo.org/wiki/Package_sets#Custom_sets)
 - external monitors in hyprland
 - telescope search icons in nvim for "disk" and see many squares and kanji
 - build up from smaller (non-desktop) profile
