@@ -189,7 +189,6 @@ Test some icons and emoji here in the browser:
 ¯\_(ツ)_/¯
 ```
 
-
 ## set up bluetooth
 
 - enable bluetooth USE flag
@@ -207,6 +206,73 @@ Test some icons and emoji here in the browser:
   - connect <device_mac>
   - info <device_mac>
 - used mictests.com to test microphone
+
+# minimal UKI
+
+- start with `make localmodconfig` if no defconfig available
+  - `diff defconfig-flattop /usr/src/linux/defconfig | grep '^<'` on nvgen:
+
+  ```
+  < CONFIG_LOCALVERSION="-lopez64"
+  < CONFIG_DEFAULT_HOSTNAME=""
+  < CONFIG_INITRAMFS_SOURCE="/boot/initrd-lopez64.cpio.xz"
+  < CONFIG_CMDLINE_BOOL=y
+  < CONFIG_CMDLINE="root=UUID=5560cc59-93b2-423f-8ae5-a2b31fd14284 crypt_root=UUID=655caefd-7e35-4d53-a252-ca92ff7e1bdc ro root_trim=yes panic=10"
+  < CONFIG_CMDLINE_OVERRIDE=y
+  < CONFIG_BT_RFCOMM=m
+  < CONFIG_BT_RFCOMM_TTY=y
+  < CONFIG_BT_BNEP=m
+  < CONFIG_BT_BNEP_MC_FILTER=y
+  < CONFIG_BT_BNEP_PROTO_FILTER=y
+  < CONFIG_RAPIDIO=m
+  < CONFIG_BLK_DEV_NVME=y
+  < CONFIG_DM_CRYPT=y
+  < CONFIG_INPUT_UINPUT=y
+  < CONFIG_GPIO_CROS_EC=m
+  < CONFIG_CHARGER_CROS_USBPD=m
+  < # CONFIG_CHARGER_CROS_PCHG is not set
+  < CONFIG_VIDEO_OV13858=m
+  < CONFIG_SND_HDA_CODEC_SIGMATEL=m
+  < CONFIG_SND_USB_AUDIO=m
+  < CONFIG_SND_USB_AUDIO_MIDI_V2=y
+  < # CONFIG_SND_SOC_SOF_INTEL_SOUNDWIRE is not set
+  < CONFIG_UHID=m
+  < CONFIG_USB_STORAGE=y
+  < CONFIG_LEDS_CLASS_MULTICOLOR=m
+  < CONFIG_CROS_EC=m
+  < CONFIG_CROS_EC_LPC=m
+  < CONFIG_CROS_KBD_LED_BACKLIGHT=m
+  < # CONFIG_CROS_EC_LIGHTBAR is not set
+  < # CONFIG_CROS_EC_DEBUGFS is not set
+  < # CONFIG_CROS_EC_SENSORHUB is not set
+  < # CONFIG_CROS_EC_TYPEC is not set
+  < # CONFIG_CROS_TYPEC_SWITCH is not set
+  < # CONFIG_DCDBAS is not set
+  < # CONFIG_DELL_RBTN is not set
+  < # CONFIG_DELL_SMBIOS is not set
+  < # CONFIG_DELL_WMI_DDV is not set
+  < # CONFIG_DELL_WMI_SYSMAN is not set
+  < CONFIG_SOUNDWIRE_INTEL=m
+  < CONFIG_VFAT_FS=m
+  < CONFIG_FAT_DEFAULT_IOCHARSET="ascii"
+  < CONFIG_CRYPTO_CHACHA20_X86_64=y
+  < CONFIG_CRYPTO_POLY1305_X86_64=y
+  < # CONFIG_UBSAN_SIGNED_WRAP is not set
+  ```
+
+  so I copied most of these over. We'll be paring both kernels down over time.
+- if savedefconfig is available
+  - cp defconfig to /usr/src/linux/.config
+  - `make olddefconfig`
+- populate CONFIG_CMDLINE="root=UUID=<uuid of /dev/mapper/root> crypt_root=UUID=<uuid of /dev/nvme0n1p2> ro root_trim=yes panic=10"
+- build the kernel with `KCFLAGS="-march=native -O2 -pipe" make -j12`
+- install modules with `make modules_install INSTALL_MOD_STRIP=1`
+- generate an initrd with `genkernel --luks initramfs`
+- copy the generated initrd to `/root/initrd-<whatever>.cpio.xz` (or whatever compression)
+- add the path to the initrd to CONFIG_INITRAMFS_SOURCE
+- rebuild the kernel
+- `cp arch/x86/boot/bzImage /boot/EFI/boot/boot64x.efi`
+- `efibootmgr --create --disk /dev/nvme0n1 --part 1 --label "gentoo" --loader /EFI/boot/bootx64.efi`
 
 # Future Enhancements
 
