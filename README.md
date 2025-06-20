@@ -46,12 +46,42 @@ using
 
 ## final configuration
 
-TODO:
-
 - emerge utilities
 - fstab
-- systemd
-- set up wireless networking
+
+  - simply add entries for boot and root partitions. something like
+
+    ```
+    UUID=AB80-30E8          /boot           vfat            noauto,noatime  0 2
+    UUID=5560cc59-93b2-423f-8ae5-a2b31fd14284 /   ext4      defaults,noatime  0 1
+    ```
+
+- systemd (from <https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/System#systemd_2>)
+  - `systemctl preset-all --preset-mode=enable-only`
+  - `systemctl preset-all`
+
+### set up wireless networking
+
+Mutually exclusive choices for network management include:
+
+- dhcpcd <https://wiki.gentoo.org/wiki/Network_management_using_DHCPCD>
+- systemd-networkd <https://wiki.gentoo.org/wiki/Systemd/systemd-networkd>
+- NetworkManager
+
+wpa_supplicant is used for network authentication, not management
+
+Using just dhcpcd and wpa_supplicant, this method with systemd worked well:
+<https://wiki.gentoo.org/wiki/Network_management_using_DHCPCD#Using_Systemd>
+essentially, just
+
+```
+cp /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant-DEVNAME.conf
+ln -s /lib/systemd/system/wpa_supplicant@.service wpa_supplicant@DEVNAME.service
+
+<<kill any wpa_supplicant instances already running>>
+
+systemctl daemon-reload
+```
 
 ## boot into new install
 
@@ -69,12 +99,13 @@ TODO:
 
 ## install compositor, terminal, browser
 
-- blacklist nouveau in `/etc/modprobe.d/blacklist.conf`
--`echo auto > /sys/bus/pci/devices/0000\:01\:00.0/power/control`
+- blacklist nouveau in `/etc/modprobe.d/blacklist.conf` -`echo auto > /sys/bus/pci/devices/0000\:01\:00.0/power/control`
 - to automate, write
+
   ```
   w /sys/bus/pci/devices/0000:01:00.0/power/control - - - - auto
   ```
+
   to `/etc/tmpfiles.d/nvidia-power.conf`
 
 ## configure pcloud via rclone
@@ -92,6 +123,10 @@ TODO:
   - `capslock = overload(control, esc)`
 
 ## streamline boot/login
+
+While working on boot optimizations, I decided to streamline the boot,
+authentication, general startup process. For now, I am enabling autologin, as
+these are single-user systems with full disk encryption anyway.
 
 - sudo for passwordless root: `visudo` and add `graham ALL=NOPASSWD: /bin/su -`
 - terminal login: edit `/etc/systemd/system/getty.target.wants/getty@tty1.service` and add
@@ -114,8 +149,21 @@ TODO:
 
 ## enable sound
 
+- use `lspci -k | grep -A3 Audio` to see if kernel is loading audio drivers
+- enable pipewire-alsa and sound-server USE flags for pipewire
+- `usermod -aG pipewire graham`
 - `systemctl --user enable --now pipewire.service pipewire-pulse.service wireplumber.service`
 - install `sys-firmware/sof-firmware` on nvgen
+- then `wpctl status` to infos
+
+sometimes, `wpctl status` shows only "Dummy Output" as a sink, where it should
+be showing "Built-in Audio Analog Stereo [vol: 0.50]" for both "Sinks:"
+and "Sources:", and "Built-in Audio [alsa]" for "Devices:".
+
+I haven't yet figured out
+
+1. what causes these to drop out, or
+2. how to get them back without a reboot
 
 ## install and configure fonts
 
@@ -125,6 +173,22 @@ TODO:
 - download nerdfont.com zip file(s): all Ubuntu variants
 - unzip into `~/.local/share/fonts`
 - `fc-cache -fv`
+
+Test some icons and emoji here in the browser:
+
+```
+    FIX = icon = " ",
+    TODO = icon = " ",
+    HACK = icon = " ",
+    WARN = icon = " ",
+    PERF = icon = " ",
+    NOTE = icon = " ",
+    TEST = icon = "⏲ ",
+
+(╯°□°）╯︵ ┻━┻
+¯\_(ツ)_/¯
+```
+
 
 ## set up bluetooth
 
@@ -150,11 +214,12 @@ TODO:
 - power profiles and switching
 - external monitors in hyprland
 - telescope search icons in nvim for "disk" and see many squares and kanji
-- root dotfiles
-- build up from smaller profile
+- build up from smaller (non-desktop) profile
 - keychain for ssh key
 - enable (proton) vpn
 - unlock luks root with usb device (storage or yubikey)
+- user mount removable devices
+- screenlocking and fingerprint reader
 
 ## Screen brightness buttons
 
