@@ -132,15 +132,16 @@ authentication, general startup process. For now, I am enabling autologin, as
 these are single-user systems with full disk encryption anyway.
 
 - sudo for passwordless root: `visudo` and add `graham ALL=NOPASSWD: /bin/su -`
-- terminal login: edit `/etc/systemd/system/getty.target.wants/getty@tty1.service` and add
+- terminal login: edit `/etc/systemd/system/getty@tty1.service.d/override.conf`
 
   ```
   [Service]
   ExecStart=
-  ExecStart=-/sbin/agetty --autologin <username> --noclear - ${TERM}
+  ExecStart=-/sbin/agetty --autologin <username> --noclear %I linux
   ```
 
   then `systemctl daemon-reload` and `systemctl restart getty@tty1`
+  Can always start debugging issues with `journalctl -u getty@tty1.service`
 
 - automatic Hyprland start: edit `.zprofile` and add
 
