@@ -29,7 +29,7 @@ using
   - copy DNS info
   - mount/bind filesystems
 - sync portage
-  - set up portage to use git (https://wiki.gentoo.org/wiki/Portage_with_Git)
+  - set up portage to use git (<https://wiki.gentoo.org/wiki/Portage_with_Git>)
     - do onetime stuff from that page to convert from rsync if needed
     - `emaint sync` to synchronize all enabled repos (simialr to emerge --sync)
 - set the profile (desktop/systemd)
@@ -171,6 +171,13 @@ I haven't yet figured out
 
 ## install and configure fonts
 
+ghostty has a zero configuration philosophy, so maybe start there. kitty also
+comes with nerd fonts pre-installed.
+
+despite passing my font smoke test scripts, the arrow icon in the default
+whichkey interface was still missing, as well as the fonts in the telescope
+picker.
+
 - emerge noto-cjk, noto-emoji, dejavu, fira-mono, fira-code
 - eselect fontconfig enalbe <target>
 - reboot
@@ -193,6 +200,17 @@ Test some icons and emoji here in the browser:
 ¯\_(ツ)_/¯
 ```
 
+I like the horizontal compactness of the Ubuntu\* nerd fonts, but their symbols
+are very small compared to the Fira and Liberation system fonts (that I assume
+are both taking symbols from the media-fonts/symbols-nerd-font package. Those
+symbols are much nicer to read, but there are more missing compared to those
+downloaded directly from nerdfonts.com.
+
+update: I downloaded and tried (via `kitten choose-fonts`) a whole bunch of
+fonts from nerdfonts.com, and discovered the large icons come from the
+difference between there being a "Mono" at the and of the font package name
+itself.
+
 ## set up bluetooth
 
 - enable bluetooth USE flag
@@ -213,7 +231,18 @@ Test some icons and emoji here in the browser:
 
 # minimal UKI
 
+## Custom kernel
+
+DO NOT CUSTOMIZE the gentoo-kernel distribution kernel. With my current level of
+knowledge, it isn't worth it. Disadvantages
+
+- no reuse of incremental builds
+- difficult to get a working boot with even only minimal changes to savedconfig
+
+configuring a custom kernel:
+
 - start with `make localmodconfig` if no defconfig available
+
   - `diff defconfig-flattop /usr/src/linux/defconfig | grep '^<'` on nvgen:
 
   ```
@@ -264,13 +293,40 @@ Test some icons and emoji here in the browser:
   < # CONFIG_UBSAN_SIGNED_WRAP is not set
   ```
 
-  so I copied most of these over. We'll be paring both kernels down over time.
+so I copied most of these over. We'll be paring both kernels down over time.
+
+## Commandline + initrd
+
+<https://wiki.gentoo.org/wiki/Kernel/Command-line_parameters>
+
+`cat /proc/cmdline` to see the command line of the currently running kernel
+
+Three ways to pass parameters to the kernel
+
+1. Kconfig (build them into the kernel)
+2. UEFI (using efibootmgr --unicode)
+3. various bootloaders e.g. grub, lilo, systemd-boot
+
+building in the command line `CONFIG_CMDLINE` by itself results in the root
+device not being found and kernel panic at boot (no decrypt prompt) so build in
+the initrd as well. Some online sources (don't remember where) said that an
+embedded command line doesn't work well without a built-in initrd.
+
+learned that CONFIG_CMDLINE_OVERRIDE is likely needed, especially for stub
+booting
+
+Here is the recipe:
+
 - if savedefconfig is available
   - cp defconfig to /usr/src/linux/.config
   - `make olddefconfig`
 - populate CONFIG_CMDLINE="root=UUID=<uuid of /dev/mapper/root> crypt_root=UUID=<uuid of /dev/nvme0n1p2> ro root_trim=yes panic=10"
+- enable CONFIG_CMDLINE_OVERRIDE
+- make necessary things built-in and not modules (see .config progression)
+  - so far I know DM_CRYPT can be either built-in or a module (in the initrd)
 - build the kernel with `KCFLAGS="-march=native -O2 -pipe" make -j12`
 - install modules with `make modules_install INSTALL_MOD_STRIP=1`
+  - this noticeably affects boot speed
 - generate an initrd with `genkernel --luks initramfs`
 - copy the generated initrd to `/root/initrd-<whatever>.cpio.xz` (or whatever compression)
 - add the path to the initrd to CONFIG_INITRAMFS_SOURCE
@@ -278,11 +334,27 @@ Test some icons and emoji here in the browser:
 - `cp arch/x86/boot/bzImage /boot/EFI/boot/boot64x.efi`
 - `efibootmgr --create --disk /dev/nvme0n1 --part 1 --label "gentoo" --loader /EFI/boot/bootx64.efi`
 
+## Firmware
+
+<https://wiki.gentoo.org/wiki/Linux_firmware>
+
+FIXED:
+`dmesg | grep -i firmware` to see what was loaded
+
+enable savedconfig USE flag, edit in /etc/portage/savedconfig, and reemerge
+
+FIXME: do I need cpu microcode? (<https://wiki.gentoo.org/wiki/Microcode>)
+
+How do I know if my cpu needs microcode, and if it is being applied?
+
+I see `amd-uc.img` in `/boot` but I don't know if I need to be e.g. adding that
+into the initrd, etc.?
+
 # Future Enhancements
 
 - touchpad palm rejection for nvgen
 - power profiles and switching
-- define some useful package sets (https://wiki.gentoo.org/wiki/Package_sets#Custom_sets)
+- define some useful package sets (<https://wiki.gentoo.org/wiki/Package_sets#Custom_sets>)
 - external monitors in hyprland
 - telescope search icons in nvim for "disk" and see many squares and kanji
 - build up from smaller (non-desktop) profile
@@ -291,6 +363,7 @@ Test some icons and emoji here in the browser:
 - unlock luks root with usb device (storage or yubikey)
 - user mount removable devices
 - screenlocking and fingerprint reader
+- binhost centralized package building for updates
 
 ## Screen brightness buttons
 
@@ -304,9 +377,89 @@ testing with `evtest` doesn't show any output when testing the keyboard device
 register. Note that the next song button etc. register on the evtest keyboard
 event. None of the multimedia keys show up with wev/xev.
 
-many forum/reddit posts suggest that blacklisting the 'hid_sensor_hub' module
-should enable these buttons.
+## Improve terminal themes
 
-After blacklisting hid_sensor_hub, some new events show up with `evtest` and are
-reordered, and the keypresses now register on the one that mentions "Consumer
-Control" i.e. still /dev/input/event8.
+need better (more contrasty) light theme colors
+
+it would be cool to be able to dynamically/interactively change the themes like
+I do with neovim
+
+### zsh, tmux, dir_colors
+
+ensure these follow along nicely
+
+### change transparency on the fly or based on dark/light
+
+this may not really be possible in ghostty
+
+probably eventually combine with light/dark theme switching
+
+how to get kitty to reload its config in all running instances? This isn't
+really possible, but you can get it to reload its config file with ctrl+shift+F5
+or with `kill -SIGUSR1 <kitty_pid>`
+
+so for kitty:
+
+- background_opacity isn't supported in the theme files
+- have a separate, single line file with `background_opacity` that is included
+  in the main kitty.conf. Do not put this file under version control because it
+  will get changed all the time
+- now can script `echo "background_opacity 0.8" > ~/.config/kitty/opacity.conf`
+  and a `kill -SIGUSR1 <kitty_pids>` to dynamically change
+
+for ghostty, the only way to force a config reload is to interactively use a
+keyboard shortcut. But this is probably okay as a workaround, as I usually don't
+have too many terminals open and don't change themes too often.
+
+## hyprland complaints
+
+When starting kitty from a terminal:
+
+```
+[0.110] [glfw error 65544]: process_desktop_settings: failed with error: [org.freedesktop.DBus.Error.UnknownMethod] No such interface “org.freedesktop.portal.Settings” on object at path /org/freedesktop/portal/desktop
+```
+
+suggest installing and starting xdg-desktop-portal-hyprland (via guru overlay)
+
+```
+[0.110] [glfw error 65544]: Notify: Failed to get server capabilities error: [org.freedesktop.DBus.Error.ServiceUnknown] The name org.freedesktop.Notifications was not provided by any .service files
+```
+
+suggest installing and starting a notification service
+<https://www.perplexity.ai/search/how-do-i-solve-the-following-e-RjBEBexwSeusYywGKEiBTg#1>
+
+```
+[0.148] Could not move child process into a systemd scope: [Errno 5] Failed to call StartTransientUnit: org.freedesktop.DBus.Error.Spawn.ChildExited: Process org.freedesktop.systemd1 exited with status 1
+```
+
+## systemd - other
+
+systemd can handle automatic parition mounting, but I'm not yet sure how
+this works with luks encryption, or if I want this over /etc/fstab
+(<https://wiki.gentoo.org/wiki/Systemd#Automatic_mounting_of_partitions_at_boot>)
+
+there are a load of USE flags for systemd; there might be some interesting
+things to take advantage of. (<https://wiki.gentoo.org/wiki/Systemd#USE_flags>)
+
+verbosity of boot messages can be tweaked
+<https://wiki.gentoo.org/wiki/Systemd#Configure_verbosity_of_boot_process>
+
+systemd-bootchart will show boot process performance. It requires the `boot` USE
+flag, but this also installs the systemd-boot bootloader, so probably want to
+look at 3rd-party utilities for profiling
+
+## kitty clean exit with disowned process
+
+use `nohup [command] &> /dev/null &`
+
+This makes using kitty as the dropdown terminal less useful
+
+after backgrounding and disowning a process in the kitty terminal, pressing
+ctrl+d to close the shell+terminal causes a hang
+
+adding to `.config/kitty/kitty.conf` didn't help:
+
+```
+shell_integration enabled  # Ensure proper shell state tracking
+confirm_os_window_close -1 # Disable exit confirmation prompts[4]
+```
