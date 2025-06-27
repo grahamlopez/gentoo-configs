@@ -293,7 +293,7 @@ configuring a custom kernel:
   < # CONFIG_UBSAN_SIGNED_WRAP is not set
   ```
 
-so I copied most of these over. We'll be paring both kernels down over time.
+so I copied most of these over. TODO: We'll be paring both kernels down over time.
 
 ## Commandline + initrd
 
@@ -363,11 +363,12 @@ into the initrd, etc.?
 - unlock luks root with usb device (storage or yubikey)
 - user mount removable devices
 - screenlocking and fingerprint reader
-- binhost centralized package building for updates
+- boot aesthetics: speed, plymouth and disk unlock
+- more theming (with fast/auto switching): wallpaper+colors/pywal16+fonts
+- virutalization: qemu for kernel/boot debugging, lightweight containers
 
 ## Screen brightness buttons
 
-WORKAROUND:
 `echo 25000 > /sys/class/backlight/intel_backlight/brightness`
 note that sys-power/acpilight comes with useful udev rules for allowing video
 group write access
@@ -463,3 +464,36 @@ adding to `.config/kitty/kitty.conf` didn't help:
 shell_integration enabled  # Ensure proper shell state tracking
 confirm_os_window_close -1 # Disable exit confirmation prompts[4]
 ```
+
+## personal overlay packages
+
+<https://github.com/XAMPPRocky/tokei>
+
+What creating a package for system configurations?
+
+Things I have wanted at some point in the past:
+
+- kmonad binary release
+- sasl oauth2 plugin
+- onlykey app
+- miniconda
+- nvhpc
+- config files
+- freeplane
+- logseq
+- gensys (my project)
+- sakaki's tools (buildkernel, etc.)
+- my savedconfigs
+- my kernel image that can be put on an sd card and boot any of my machines
+- terminal fun things:
+  - <https://github.com/cmatsuoka/asciiquarium>
+  - <https://gitlab.com/jallbrit/cbonsai>
+  - <https://github.com/bartobri/no-more-secrets>
+
+## binhost
+
+I first need to get threadripper reinstalled to more closely match the profile
+and USE flags of nvgen and flattop
+
+<https://wiki.gentoo.org/wiki/Binary_package_guide#Creating_binary_packages>
+<https://www.gentoo.org/news/2024/02/04/x86-64-v3.html>
