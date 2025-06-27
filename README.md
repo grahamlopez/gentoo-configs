@@ -352,20 +352,30 @@ into the initrd, etc.?
 
 # Future Enhancements
 
+A big list of ideas of things I've wanted to try at some point. Some are very
+low effort, some are very high.
+
 - touchpad palm rejection for nvgen
 - power profiles and switching
 - define some useful package sets (<https://wiki.gentoo.org/wiki/Package_sets#Custom_sets>)
+- unlock luks root with usb device (storage or yubikey)
 - external monitors in hyprland
-- telescope search icons in nvim for "disk" and see many squares and kanji
-- build up from smaller (non-desktop) profile
 - keychain for ssh key
 - enable (proton) vpn
-- unlock luks root with usb device (storage or yubikey)
-- user mount removable devices
+- build up from smaller (non-desktop) profile
+- telescope search icons in nvim for "disk" and see many squares and kanji
 - screenlocking and fingerprint reader
+- user mount removable devices
 - boot aesthetics: speed, plymouth and disk unlock
 - more theming (with fast/auto switching): wallpaper+colors/pywal16+fonts
-- virutalization: qemu for kernel/boot debugging, lightweight containers
+- virutalization:
+  - qemu for kernel/boot debugging
+  - lightweight containers for linux (lxc, podman, etc.)
+  - gentoo prefix
+  - gentoo in WSL
+  - lookinglass for windows
+  - https://github.com/quickemu-project/quickemu
+  - https://github.com/HikariKnight/QuickPassthrough
 
 ## Screen brightness buttons
 
