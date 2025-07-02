@@ -158,7 +158,7 @@ these are single-user systems with full disk encryption anyway.
 - `usermod -aG pipewire graham`
 - `systemctl --user enable --now pipewire.service pipewire-pulse.service wireplumber.service`
 - install `sys-firmware/sof-firmware` on nvgen
-- then `wpctl status` to infos
+- then `wpctl status` to show info
 
 sometimes, `wpctl status` shows only "Dummy Output" as a sink, where it should
 be showing "Built-in Audio Analog Stereo [vol: 0.50]" for both "Sinks:"
@@ -168,6 +168,13 @@ I haven't yet figured out
 
 1. what causes these to drop out, or
 2. how to get them back without a reboot
+
+For example, on nvgen after a distribution gentoo-kernel upgrade, sound worked
+with the dist kernel, but no longer with my (unchanged) gentoo-sources kernel. I
+booted into the dist kernel and used `make localmodconfig` and rebuilt. This
+didn't work. So I took the .config from the dist kernel and manually copied
+everything sound related over to the .config for my kernel. This worked. The
+defconfig is saved in the repo. FIXME: this nvgen kernel needs to be re-minimized
 
 ## install and configure fonts
 
