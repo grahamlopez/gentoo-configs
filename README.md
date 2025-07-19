@@ -490,7 +490,8 @@ What creating a package for system configurations?
 
 Things I have wanted at some point in the past:
 
-- kmonad binary release
+- impala
+- kmonad binary release (alternatives: kanata, keyd)
 - sasl oauth2 plugin
 - onlykey app
 - miniconda
