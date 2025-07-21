@@ -228,7 +228,7 @@ itself.
   - list
   - discoverable on
   - pairable on
-  - scan
+  - scan on
   - devices
   - pair <device_mac>
   - trust <device_mac>
