@@ -362,6 +362,7 @@ into the initrd, etc.?
 A big list of ideas of things I've wanted to try at some point. Some are very
 low effort, some are very high.
 
+- port omarchy to gentoo
 - touchpad palm rejection for nvgen
 - power profiles and switching
 - define some useful package sets (<https://wiki.gentoo.org/wiki/Package_sets#Custom_sets>)
