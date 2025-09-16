@@ -114,6 +114,18 @@ Enable dhcpcd.
 
 ## install compositor, terminal, browser
 
+If no session gets created (i.e. Hyprland complains about no XDG_RUNTIME_DIR) I
+traced this back to an "Input/Output error" with pam_systemd.so (seen via
+`systemctl status systemd-logind.service` or `journalctl -b | grep pam` etc).
+
+After much debugging, hardware tests, etc, I discovered that disabling
+`systemd-userdbd` was the only workaround, and though maybe not recommended(?),
+it is the case on flattop, so going with it for now.
+
+```
+systemctl disable systemd-userdbd
+```
+
 - blacklist nouveau in `/etc/modprobe.d/blacklist.conf` -`echo auto > /sys/bus/pci/devices/0000\:01\:00.0/power/control`
 - to automate, write
 
