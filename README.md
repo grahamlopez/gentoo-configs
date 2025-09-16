@@ -29,14 +29,22 @@ using
   - copy DNS info
   - mount/bind filesystems
 - sync portage
+  - emerge-webrsync
   - set up portage to use git (<https://wiki.gentoo.org/wiki/Portage_with_Git>)
+    - umount /dev/shm
+    - mount --types tmpfs --options nosuid,nodev shm /dev/shm
+    - emerge gentoo-repository dev-vcs/git
     - do onetime stuff from that page to convert from rsync if needed
+      - eselect repository remove -f gentoo
+      - rm -rf /var/db/repos/gentoo
+      - eselect repository add gentoo git https://github.com/gentoo-mirror/gentoo.git
     - `emaint sync` to synchronize all enabled repos (simialr to emerge --sync)
 - set the profile (desktop/systemd)
 - set the timezone (defer if dual booting)
 - configure locales
-  - locale.gen
-  - eselect
+  - edit /etc/locale.gen
+  - `locale-gen`
+  - eselect locale list
 
 ## install firmware and kernel
 
@@ -45,10 +53,11 @@ using
 - `genkernel --luks initramfs`
 - set up efibootmgr
   - `efibootmgr --create --index 5 --disk /dev/nvme0n1 --part 1 --label "gentoo-alt" --loader /EFI/boot/bootx64-alt.efi --unicode 'crypt_root=UUID=63fdec71-9236-43d1-8d4a-2f3afba7d59a root=UUID=f81baa5e-121b-4983-ab30-020d89fbe1f1 ro initrd=/EFI/boot/initrd-alt root_trim=yes'`
-- re-emerge systemd with USE=cryptsetup
+- re-emerge systemd with USE=cryptsetup (or just update world)
 
 ## final configuration
 
+- set root password
 - emerge utilities
 - fstab
 
@@ -79,12 +88,15 @@ essentially, just
 
 ```
 cp /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant-DEVNAME.conf
+cd /etc/systemd/system/multi-user.target.works
 ln -s /lib/systemd/system/wpa_supplicant@.service wpa_supplicant@DEVNAME.service
 
 <<kill any wpa_supplicant instances already running>>
 
 systemctl daemon-reload
 ```
+
+Enable dhcpcd.
 
 ## boot into new install
 
