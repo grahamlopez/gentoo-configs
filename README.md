@@ -143,7 +143,7 @@ systemctl disable systemd-userdbd
 
 ## setup light/dark theme switching
 
-- install xdg-desktop-portal-gtk xdg-desktop-portal-gtk
+- install xdg-desktop-portal-gtk
 - reboot
 - `gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'`
 - set up keyd
@@ -212,7 +212,7 @@ picker.
 - emerge noto-cjk, noto-emoji, dejavu, fira-mono, fira-code
 - eselect fontconfig enalbe <target>
 - reboot
-- download nerdfont.com zip file(s): all Ubuntu variants
+- download nerdfonts.com zip file(s): all Ubuntu variants
 - unzip into `~/.local/share/fonts`
 - `fc-cache -fv`
 
