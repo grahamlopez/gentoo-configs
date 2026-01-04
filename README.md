@@ -395,7 +395,9 @@ use flag is already enabled.
 
 I ended up emerging nvidia-drivers, then based on warnings I saw from it about
 the kernel being built with an older GCC, I emerged gentoo-kernel, then
-nvidia-drivers again.
+nvidia-drivers again. Then a normal `genkernel --luks initramfs`, put the images
+into `/EFI/boot` and it seems to work fine. The nvidia-drivers package
+installed a `/etc/modprobe.d/nvidia.conf` and whatever else it needed.
 
 # Future Enhancements
 
