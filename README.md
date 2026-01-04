@@ -381,6 +381,22 @@ How do I know if my cpu needs microcode, and if it is being applied?
 I see `amd-uc.img` in `/boot` but I don't know if I need to be e.g. adding that
 into the initrd, etc.?
 
+## nvidia drivers
+
+for bequiet with the Quadro P620 (Pascal) installed, nouveau drivers do work
+with wayland/hyprland, but the performance is poor enough to notice during
+normal usage (choppy mouse cursor, slow window movements).
+
+To enable, set `VIDEO_CARDS="nouveau"` in `/etc/portage/make.conf` 
+
+Attempting to use x11-drivers/nvidia-drivers. For right now on bequiet, I'm
+using a distribution kernel so enabling the `dist-kernel` use flag; `wayland`
+use flag is already enabled.
+
+I ended up emerging nvidia-drivers, then based on warnings I saw from it about
+the kernel being built with an older GCC, I emerged gentoo-kernel, then
+nvidia-drivers again.
+
 # Future Enhancements
 
 A big list of ideas of things I've wanted to try at some point. Some are very
