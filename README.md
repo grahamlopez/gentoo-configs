@@ -533,6 +533,10 @@ What creating a package for system configurations?
 
 Things I have wanted at some point in the past:
 
+- grist
+- nightly neovim
+- version bumped tmux
+- yt-dlp
 - impala
 - kmonad binary release (alternatives: kanata, keyd)
 - sasl oauth2 plugin
