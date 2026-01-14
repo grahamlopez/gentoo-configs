@@ -409,8 +409,9 @@ low effort, some are very high.
 - power profiles and switching
 - define some useful package sets (<https://wiki.gentoo.org/wiki/Package_sets#Custom_sets>)
 - unlock luks root with usb device (storage or yubikey)
+    - [about TPM unlock](https://blastrock.github.io/fde-tpm-sb.html)
 - external monitors in hyprland
-- keychain for ssh key
+- keychain for ssh key (or yubikey)
 - enable (proton) vpn
 - build up from smaller (non-desktop) profile
 - telescope search icons in nvim for "disk" and see many squares and kanji
