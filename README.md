@@ -260,6 +260,18 @@ itself.
   - info <device_mac>
 - used mictests.com to test microphone
 
+Sometimes the '5tgb' column of the Lily58 drops out and doesn't work. Some
+combination of restarting the bluetooth service, reconnecting the keyboard, and
+connecting it via usb brings it back. Haven't root caused this or gotten a
+consistent fix. But now I'm getting inconsistent bounce bounce behavior, both
+too slow and too fast. Note: this affects so far bequiet and nvgen right after
+updates. Other hosts tbd.
+
+Just some more testing notes: I couldn't reproduce in Windows, and I removed the
+bluetooth connection from Windows before rebooting. Now back in nvgen, I can't
+reproduct the bad debounce behavior again. On bequiet, I haven't been able to
+reproduce it again yet, but historically it only shows up intermittently anyway.
+
 # minimal UKI
 
 ## Custom kernel
