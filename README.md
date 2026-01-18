@@ -7,6 +7,9 @@ using
 - pipewire+wireplumber (no pulseaudio)
 - dhcpcd+wpa_supplicant (no networkmanager)
 
+Hopefully this repo mostly goes away in the future and is replaced by an overlay
+that will do a lot more automatically.
+
 # Get to first boot
 
 ## prepare disks
@@ -430,6 +433,7 @@ low effort, some are very high.
 - screenlocking and fingerprint reader
 - user mount removable devices
 - boot aesthetics: speed, plymouth and disk unlock
+    - start with systemd-analyze
 - more theming (with fast/auto switching): wallpaper+colors/pywal16+fonts
 - virutalization:
   - qemu for kernel/boot debugging
