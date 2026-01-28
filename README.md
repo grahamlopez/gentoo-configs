@@ -275,6 +275,12 @@ bluetooth connection from Windows before rebooting. Now back in nvgen, I can't
 reproduct the bad debounce behavior again. On bequiet, I haven't been able to
 reproduce it again yet, but historically it only shows up intermittently anyway.
 
+This is starting to show up a little more often, both with the repeated keys
+issue, and the dead column issue. It happens most often on bequiet, and I've
+never seen it yet in Windows. It has also started to happen on the right half
+'6yhn' column. Most of the time, I can mostly work around it by plugging in the
+affected half, but it isn't perfect (still getting debounce/dropped chars).
+
 # minimal UKI
 
 ## Custom kernel
