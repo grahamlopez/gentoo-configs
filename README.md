@@ -36,7 +36,7 @@ that will do a lot more automatically.
   - set up portage to use git (<https://wiki.gentoo.org/wiki/Portage_with_Git>)
     - umount /dev/shm
     - mount --types tmpfs --options nosuid,nodev shm /dev/shm
-    - emerge gentoo-repository dev-vcs/git
+    - emerge eselect-repository dev-vcs/git
     - do onetime stuff from that page to convert from rsync if needed
       - eselect repository remove -f gentoo
       - rm -rf /var/db/repos/gentoo
