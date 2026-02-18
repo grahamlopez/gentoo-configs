@@ -157,6 +157,10 @@ systemctl disable systemd-userdbd
 - `gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'`
 - set up keyd
   - `capslock = overload(control, esc)`
+- use caps as control in the console (systemd):
+  - edit keymap file
+  - point `/etc/vconsole.conf` to the edited keymap file
+  - `systemctl restart systemd-vconsole-setup.service`
 
 ## streamline boot/login
 
@@ -591,3 +595,19 @@ and USE flags of nvgen and flattop
 
 <https://wiki.gentoo.org/wiki/Binary_package_guide#Creating_binary_packages>
 <https://www.gentoo.org/news/2024/02/04/x86-64-v3.html>
+
+# starfighter quirks
+
+- kkey debounce
+- no key repeat in console
+  - fix with atkbd.softrepeat=1 kernel arg?
+  - this went away somehow after installing 98 packages to get hyprland installed
+- audio amp clicks
+- 7w idle usage
+  - powertop helped a bit
+  - booted minimal and measured around 4.2W on console with backlight very low
+  - now around 5-5.5W in hyprland
+  - plugging usb mouse ups it by 0.5W
+  - intel EPP (tuned ebuild) package recommended (StarFighter Perplexity space)
+- `.utils/hypr_lid.sh` causes lockup
+  - could be due to new hyprland version
