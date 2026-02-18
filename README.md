@@ -92,7 +92,7 @@ essentially, just
 ```
 cp /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant-DEVNAME.conf
 cd /etc/systemd/system/multi-user.target.wants
-ln -s /lib/systemd/system/wpa_supplicant.service wpa_supplicant@DEVNAME.service
+ln -s /lib/systemd/system/wpa_supplicant@.service wpa_supplicant@DEVNAME.service
 
 <<kill any wpa_supplicant instances already running>>
 
