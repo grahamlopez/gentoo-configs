@@ -56,6 +56,12 @@ that will do a lot more automatically.
 - `genkernel --luks initramfs`
 - set up efibootmgr
   - `efibootmgr --create --index 5 --disk /dev/nvme0n1 --part 1 --label "gentoo-alt" --loader /EFI/boot/bootx64-alt.efi --unicode 'crypt_root=UUID=63fdec71-9236-43d1-8d4a-2f3afba7d59a root=UUID=f81baa5e-121b-4983-ab30-020d89fbe1f1 ro initrd=/EFI/boot/initrd-alt root_trim=yes'`
+  - for coreboot, it is a bit more picky. This ended up working on startop
+    - `efibootmgr --create --disk /dev/nvme0n1 --part 1 --index 5 --label 'gentoo-dist' --loader '\EFI\boot\boot64x-dist.efi' --full-dev-path --unicode ' crypt_root=UUID=820728fa-649e-4042-8548-f510109ac165 root=UUID=02ab8289-956a-47cb-a3e0-569309ef66d5 ro root_trim=yes initrd=\EFI\boot\initrd-dist'`
+    - note some differences (I haven't isolated which of these changes is actually needed)
+      - `--full-dev-path` (definitely needed)
+      - `initrd=` arg is last
+      - switch to backslashes in path names
 - re-emerge systemd with USE=cryptsetup (or just update world)
 
 ## final configuration
