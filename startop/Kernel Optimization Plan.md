@@ -177,6 +177,8 @@ Your system boots on bare metal with coreboot. All guest/paravirt code is wasted
 
 You want host virtualization. Keep KVM and KVM_INTEL as modules, but trim the extras.
 
+### notes
+
 - begin size: 25785344
 - after size: 25887744
 
@@ -226,6 +228,13 @@ CONFIG_VHOST_NET=m
 
 ## Phase 4: Graphics Driver Cleanup
 
+### notes
+
+I also enabled CONFIG_DRM_I915_GVT_KVMGT=m as it seemed to coincide with host virtualization goals
+
+- begin size: 25887744
+- after size: (bundled phases 4-7)
+
 ### Step 4.1 — Choose i915 only, disable xe
 
 ```
@@ -242,6 +251,13 @@ Verify and ensure all non-Intel DRM drivers are disabled (nouveau, amdgpu, radeo
 ***
 
 ## Phase 5: Storage & Filesystem Trimming
+
+### notes
+
+Kept SCSI to have usb drive flexibility. Added NFS and SAMBA/CIFS.
+
+- begin size: 25887744
+- after size: (bundled phases 4-7)
 
 ### Step 5.1 — Remove SCSI/ATA/SATA (you have zero SATA devices)
 
@@ -305,6 +321,11 @@ CONFIG_MQ_IOSCHED_DEADLINE=y
 
 ## Phase 6: Networking Cleanup
 
+### notes
+
+- begin size: 25887744
+- after size: (bundled phases 4-7)
+
 ### Step 6.1 — Remove unused network protocols and drivers
 
 ```
@@ -327,6 +348,11 @@ Your config already has `CONFIG_IWLWIFI=m` and `CONFIG_IWLMVM=m`, which is corre
 
 ## Phase 7: Audio Cleanup
 
+### notes
+
+- begin size: 25887744
+- after size: 25539584
+
 ### Step 7.1 — Keep only needed audio paths
 
 ```
@@ -344,6 +370,11 @@ CONFIG_SND_HDA_CODEC_GENERIC=m
 ***
 
 ## Phase 8: Security Module Cleanup
+
+### notes
+
+- begin size: 25539584
+- after size: 
 
 ### Step 8.1 — Remove unused security modules
 
