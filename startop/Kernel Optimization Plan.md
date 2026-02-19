@@ -51,6 +51,13 @@ efibootmgr --create --disk /dev/nvme0n1 --part 1 \
 
 These changes give the single largest reduction in kernel bloat and improve performance by letting the compiler target your exact CPU.
 
+### notes
+
+- dist size:   22360064
+- initrd-dist: 12882204
+- begin size:  26746880
+- after size:  26194944
+
 ### Step 1.1 — Set processor type to Intel Core (not generic x86-64)
 
 ```
@@ -104,7 +111,7 @@ CONFIG_NR_CPUS=16
 
 ### Step 1.5 — Target the native CPU with march=native (already doing this)
 
-Your build command already uses `KCFLAGS="-march=native -O2 -pipe"`. This is correct and generates optimal code for Arrow Lake. Keep it.[^1]
+Your build command already uses `KCFLAGS="-march=native -O2 -pipe"`. This is correct and generates optimal code for Arrow Lake. Keep it.
 
 ***
 
@@ -130,7 +137,7 @@ Your system boots on bare metal with coreboot. All guest/paravirt code is wasted
 # CONFIG_PCI_XEN is not set
 ```
 
-**Justification**: dmesg confirms "Booting paravirtualized kernel on bare hardware" — the paravirt framework is active but doing nothing useful. Xen PV/HVM, KVM guest, ACRN, bhyve, TDX guest are all irrelevant on a laptop running as a host. Removing this eliminates a large amount of code and the paravirt indirect-call overhead in hot paths.[^5]
+**Justification**: dmesg confirms "Booting paravirtualized kernel on bare hardware" — the paravirt framework is active but doing nothing useful. Xen PV/HVM, KVM guest, ACRN, bhyve, TDX guest are all irrelevant on a laptop running as a host. Removing this eliminates a large amount of code and the paravirt indirect-call overhead in hot paths.
 
 ### Step 2.2 — Remove Xen-specific subsystems entirely
 
@@ -147,7 +154,7 @@ Your system boots on bare metal with coreboot. All guest/paravirt code is wasted
 # CONFIG_XEN_BLKDEV_BACKEND is not set (verify already unset)
 ```
 
-**Justification**: Your lsmod shows zero Xen modules loaded. These are guest-side drivers for a hypervisor you're not running under.[^8][^4]
+**Justification**: Your lsmod shows zero Xen modules loaded. These are guest-side drivers for a hypervisor you're not running under.
 
 ### Step 2.3 — Remove Hyper-V guest support
 
@@ -157,7 +164,7 @@ Your system boots on bare metal with coreboot. All guest/paravirt code is wasted
 # CONFIG_HYPERV_IOMMU is not set
 ```
 
-**Justification**: Not running under Hyper-V.[^8]
+**Justification**: Not running under Hyper-V.
 
 ***
 
