@@ -1,8 +1,7 @@
 
 # PLAN: <topic>
 
-Each PLAN is a tight, single-topic document: one device, one subsystem, or one
-experiment (e.g. “boot time”, “power saving”, “audio latency”).
+Each PLAN is a tight, single-topic document: one device, one subsystem, or one experiment (e.g. “boot time”, “power saving”, “audio latency”).
 
 Each PLAN should answer:
 - What are we trying to achieve?
@@ -11,14 +10,11 @@ Each PLAN should answer:
 
 You then:
 - Ask Perplexity to draft or refine one plan at a time.
-- After running commands and collecting logs, paste results and let the plan be
-  updated with “Findings & Decisions” and refined next steps.
+- After running commands and collecting logs, paste results and let the plan be updated with “Findings & Decisions” and refined next steps.
 
 When starting a session, you can say something like:
 
-    “We’re working in plans/PLAN-audio-low-latency.md. Here is the current file.
-    Help me refine the Experiments section and propose the next three
-    experiments given these logs: …”
+    “We’re working in plans/PLAN-audio-low-latency.md. Here is the current file. Help me refine the Experiments section and propose the next three experiments given these logs: …”
 
 Good habits:
 - Always name the active plan explicitly.
@@ -28,13 +24,11 @@ Ask for:
 - “Update the plan given these results.”
 - “Trim obsolete experiments and keep only what matters now.”
 
-This keeps context tight and emulates the “plan → execute → test → commit → next
-plan” loop described for code projects.
+This keeps context tight and emulates the “plan → execute → test → commit → next plan” loop described for code projects.
 
 ## Objective
 - One or two sentences.
-- Example: Achieve stable sub-10ms audio latency in JACK/PipeWire with no XRuns
-  under normal desktop usage.
+- Example: Achieve stable sub-10ms audio latency in JACK/PipeWire with no XRuns under normal desktop usage.
 
 ## Constraints & Safety
 - Acceptable trade-offs (e.g. can increase power use, but not fan noise beyond X).

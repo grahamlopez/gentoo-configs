@@ -603,6 +603,8 @@ and USE flags of nvgen and flattop
   - fix with atkbd.softrepeat=1 kernel arg?
   - this went away somehow after installing 98 packages to get hyprland installed
 - audio amp clicks
+  - turn off soundcard in /sys?
+  - remove/add driver module on demand?
 - 7w idle usage
   - powertop helped a bit
   - booted minimal and measured around 4.2W on console with backlight very low
