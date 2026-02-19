@@ -177,6 +177,9 @@ Your system boots on bare metal with coreboot. All guest/paravirt code is wasted
 
 You want host virtualization. Keep KVM and KVM_INTEL as modules, but trim the extras.
 
+- begin size: 25785344
+- after size: 25887744
+
 ### Step 3.1 — Clean KVM configuration
 
 ```
