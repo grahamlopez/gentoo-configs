@@ -55,7 +55,7 @@ These changes give the single largest reduction in kernel bloat and improve perf
 
 - dist size:   22360064
 - initrd-dist: 12882204
-- begin size:  26746880
+- begin size:  26746880 (4766912 is initrd)
 - after size:  26194944
 
 ### Step 1.1 — Set processor type to Intel Core (not generic x86-64)
@@ -118,6 +118,11 @@ Your build command already uses `KCFLAGS="-march=native -O2 -pipe"`. This is cor
 ## Phase 2: Remove Hypervisor Guest Support
 
 Your system boots on bare metal with coreboot. All guest/paravirt code is wasted.[^5]
+
+### notes
+
+- begin size: 26194944
+- after size: 25785344
 
 ### Step 2.1 — Disable all hypervisor guest code
 
@@ -656,3 +661,160 @@ xe                   43827...
 
 8. [kernel-config-6.18.8-full.txt](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/collection_05e0d332-5b67-43a5-8ccf-c47e1dc1a1e1/ff0b786c-db31-42a8-bef8-b70b53ac19c9/kernel-config-6.18.8-full.txt?AWSAccessKeyId=ASIA2F3EMEYEUCKJPE7P&Signature=m9ceBtX5y%2Fd5vWi%2FDAaTTc2CrQg%3D&x-amz-security-token=IQoJb3JpZ2luX2VjELn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJGMEQCIAHcs%2B3z61CmhRtndOHUTduizKIfkm%2FueSlagsj0ucgvAiBdMhT6WgNnJN7xDE4VtyeBX%2BK%2Bq%2FVje2eCNj4Tamipcir8BAiB%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAEaDDY5OTc1MzMwOTcwNSIM%2Bhgt3IcpdHIXuWOIKtAEAgMqHHx%2Buo2ct0ilrTS%2B3jYvYvOwz8GFodHSHznQz%2Fi8uKcKkRR8jo0%2BQTaO3ik7APllhYVzpMEBGOliRFwXuQeFNgrxbrWlu%2FR5gCnz%2F4reZl9mtPCj%2BA1YaBanxqP6f35ajfg7gSX%2FR40FSbPRfWlqkrAYW73kJMlW%2BQfQTN8uKAc2zGom8Myp7U%2BcSdvVGeYYd7YshoodgtO%2BnG8mmib8zzvpIjUN7bxpsjV9zpomP5SqITjDmcVjIkrXsCvrfIIV3B4LYD0i1IJCH24jxojodj2tAoUMCAV9YZldYvdnFJcMWML20WpAj7CMHlzkJE2kIwhAmvqZH2zwWmssnuMZnIxLwJWMUQyPq3aNFptBRFM7tO5YEeGe2dCc3dsDNd%2F5ynPTYh7DIGHDsXqnUdlA11dED%2FQYNtTWzRr%2BVVumWQEh7KE%2FKBaktz3B5JITdq52szkNrNC79SV3nJxDm4YGg1Uzhpvsm%2Frz%2BmpxIaZgtE1WwqEx9xescDzO0qNZSDDjdEdFH3V%2F1m9uKulemPI1cN1DQiMMe9sPRPYQoNaT2YXyl%2BKjlxe5okNpqNYMVU4oDERcONbJiQIpU5jjSa6ARLfC6lu3M9Qfp1C1BcV5fzds0wMaHsvUO3DAakLPayXwv4euWibhHVriaLNuftp9TTfGMsO3qYTDCa%2BNtAxdvF4ZHDTogKXwwTjZrkEVdBliTB%2BaH5EcvQ%2B4YD6Ft9WObiCI4Nn%2FhzaTvk2RcRg9HoIS%2Bn1czVsxhqk4jTHIIBy95siqZghF9edByZj5GTCw6dzMBjqZAVOKTWYXz0cZz9i35I2XreHckkyp5NgUoaJ2%2F2qIpm%2FieoBQf5jQVLOJXk2auSy94t%2BKgxMCtaSBPvPkH2RHuMpjAOzOT5yFZ2wVLQqg8NlzGqd3t1pD6FhiAUJAaYPCfYh0FM2vPNzFZGJEhyaV1kBJPqKUHvIjd0hRXpIxxsztBSQISF2t8Yize0ncRf7gCJ1edCwYm%2BjlIw%3D%3D&Expires=1771521931) - CONFIGX86SGXy CONFIGX86USERSHADOWSTACKy CONFIGINTELTDXHOSTy CONFIGEFIy CONFIGEFISTUBy CONFIGEFIHANDO...
 
+## Addendum: Speeding Up Kernel Builds and Linking
+
+The following changes and practices reduce build and especially link time while keeping the plan’s goals intact.
+A. Use all 16 cores
+
+    Change your build command:
+
+    bash
+    KCFLAGS="-march=native -O2 -pipe" make -j16
+
+    Reason: The CPU has 16 hardware threads and no SMT; -j16 uses the whole chip instead of the current -j12.
+
+B. Trim debug and tracing to shrink vmlinux
+
+Tracers (keep basic ftrace only)
+
+    Path: Kernel hacking → Tracers
+
+    Set:
+
+        Keep:
+
+            CONFIG_FTRACE=y
+            CONFIG_EVENT_TRACING=y
+
+        Disable:
+
+            # CONFIG_FUNCTION_TRACER is not set
+            # CONFIG_FUNCTION_GRAPH_TRACER is not set
+            # CONFIG_SCHED_TRACER is not set
+            # CONFIG_HWLAT_TRACER is not set
+            # CONFIG_OSNOISE_TRACER is not set
+            # CONFIG_TIMERLAT_TRACER is not set
+            # CONFIG_MMIOTRACE is not set
+            # CONFIG_BLK_DEV_IO_TRACE is not set
+            # CONFIG_STACK_TRACER is not set
+            # CONFIG_FUNCTION_PROFILER is not set​
+
+    Reason: These tracers add large amounts of instrumentation and debug sections, inflating link work and kernel size.​
+
+Disable KFENCE
+
+    Path: Kernel hacking → Memory Debugging → KFENCE
+
+    Set:
+
+        # CONFIG_KFENCE is not set​
+
+    Reason: KFENCE reserves memory and adds guard logic; useful for debugging, unnecessary for production and slows builds.​
+
+Disable UBSAN if present
+
+    Path: Kernel hacking → Generic Kernel Debugging Instruments → Undefined behaviour sanitizer
+
+    Set:
+
+        # CONFIG_UBSAN is not set​
+
+    Reason: UBSAN injects many checks into code, increasing compilation and link time.​
+
+Disable PM/ACPI debug where not needed
+
+    Path: Power management and ACPI options → Power management debug
+
+    Set:
+
+        # CONFIG_PM_DEBUG is not set
+        # CONFIG_PM_TEST_SUSPEND is not set
+        # CONFIG_PM_SLEEP_DEBUG is not set
+        # CONFIG_PM_TRACE is not set
+        # CONFIG_PM_TRACE_RTC is not set​
+
+    Reason: These options add extra debug code for suspend/resume diagnostics; not needed in normal use.​
+
+C. Avoid heavy sanitizers and extra profiling
+
+KASAN/KMSAN/KCSAN
+
+    Path: Kernel hacking → Memory Debugging
+
+    Ensure:
+
+        # CONFIG_KASAN is not set
+        # CONFIG_KMSAN is not set
+        # CONFIG_KCSAN is not set​
+
+    Reason: Sanitizers are extremely expensive in build time and binary size.
+
+Profiling support
+
+    Path: General setup → Profiling support
+
+    Optionally:
+
+        # CONFIG_PROFILING is not set​
+
+    Reason: Old-style profiling adds some extra objects; perf will still work via perf events.​
+
+D. Turn off BTF if not needed for BPF CO-RE
+
+    Path: Kernel hacking → Compile-time checks and compiler options → Debug information
+
+    Set:
+
+        # CONFIG_DEBUG_INFO_BTF is not set
+        # CONFIG_DEBUG_INFO_BTF_MODULES is not set​
+
+    Reason: BTF generation and embedding is link-intensive; skip if you are not using CO-RE BPF tools.​
+
+E. Keep LTO disabled
+
+    Path: Kernel hacking → Link Time Optimization (LTO)
+
+    Ensure:
+
+        CONFIG_LTO_NONE=y
+        # CONFIG_LTO_CLANG_FULL is not set
+        # CONFIG_LTO_CLANG_THIN is not set​
+
+    Reason: LTO is very slow for large kernels; you already have it off, keep it that way.​
+
+F. Shrink the kernel to shrink link time
+
+    Earlier phases (removing Xen/Hyper-V/TDX guest code, unused filesystems, SCSI/ATA, staging drivers, unused LSMs, SOF audio, xe, etc.) will significantly reduce the amount of code and debug data the linker has to handle.
+
+    Reason: Less code compiled and linked directly translates into faster builds and smaller vmlinux.
+
+G. Use ccache for repeated rebuilds
+
+    Install:
+
+    bash
+    emerge --ask dev-util/ccache
+
+    For kernel builds:
+
+    bash
+    export CC="ccache gcc"
+    KCFLAGS="-march=native -O2 -pipe" make -j16
+
+    Reason: ccache avoids recompiling unchanged translation units between incremental kernel tweaks; the final link still runs but the compile phase shrinks noticeably.
+
+H. Build from a stable defconfig, not localmodconfig each time
+
+    Workflow:
+
+        Maintain /root/defconfig-starfighter with make savedefconfig.
+
+        For each rebuild:
+
+        bash
+        cp /root/defconfig-starfighter .config
+        make olddefconfig
+
+    Only rerun make localmodconfig when jumping to a new kernel generation, then regenerate the defconfig.
+
+    Reason: localmodconfig itself takes time and tends to churn options, causing unnecessary recompiles compared to a stable defconfig baseline.​
