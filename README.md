@@ -434,6 +434,8 @@ installed a `/etc/modprobe.d/nvidia.conf` and whatever else it needed.
 
 This is a work in progress.
 
+## first pass (starfighter)
+
 To see the current state of things, especially how it relates to boot process
 and times:
 
@@ -644,6 +646,29 @@ and USE flags of nvgen and flattop
 # starfighter quirks
 
 - kkey debounce
+  - add `i8042.nomux` to kernel command line improves it quite a bit, but not completely
+    - completely gone in kitty, but still happens in firefox
+  - also trying `i8042.nomux i8042.reset` to see if we can get any additional improvement
+  - libinput was a deadend
+  - `/etc/keyd/default.conf` seems to be doing a decent job so far
+
+        # /etc/keyd/default.conf
+        [ids]
+
+        *
+
+        [main]
+
+        # Maps capslock to escape when pressed and control when held.
+        capslock = overload(control, esc)
+
+        # Remaps the escape key to capslock
+        # esc = capslock
+
+        debounce = 25
+        repeat_delay = 700
+        repeat_rate = 15
+
 - no key repeat in console
   - fix with atkbd.softrepeat=1 kernel arg?
   - this went away somehow after installing 98 packages to get hyprland installed
@@ -658,3 +683,4 @@ and USE flags of nvgen and flattop
   - intel EPP (tuned ebuild) package recommended (StarFighter Perplexity space)
 - `.utils/hypr_lid.sh` causes lockup
   - could be due to new hyprland version
+- i915 drm GSC proxy dmesg error (after aggressive kernel pruning)
