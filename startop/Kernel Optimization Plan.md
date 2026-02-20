@@ -374,7 +374,7 @@ CONFIG_SND_HDA_CODEC_GENERIC=m
 ### notes
 
 - begin size: 25539584
-- after size: 
+- after size: (bundled phases 8-11)
 
 ### Step 8.1 — Remove unused security modules
 
@@ -408,6 +408,11 @@ CONFIG_SECCOMP_FILTER=y
 ## Phase 9: Debug & Tracing Reduction
 
 This is one of the biggest wins for kernel size and boot speed.
+
+### notes
+
+- begin size: 25539584
+- after size: (bundled phases 8-11)
 
 ### Step 9.1 — Disable KFENCE
 
@@ -500,6 +505,11 @@ CONFIG_DEBUG_INFO_COMPRESSED_ZLIB=y       # Keep if you want debuginfo, at least
 
 ## Phase 10: Miscellaneous Cleanup
 
+### notes
+
+- begin size: 25539584
+- after size: (bundled phases 8-11)
+
 ### Step 10.1 — Remove unused input/HID drivers
 
 ```
@@ -574,6 +584,11 @@ CONFIG_SERIAL_8250_RUNTIME_UARTS=4     # Down from 32
 ***
 
 ## Phase 11: Power Optimization Settings
+
+### notes
+
+- begin size: 25539584
+- after size: 23188480
 
 ### Step 11.1 — Enable workqueue power-efficient mode
 
