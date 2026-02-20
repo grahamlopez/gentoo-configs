@@ -430,6 +430,46 @@ nvidia-drivers again. Then a normal `genkernel --luks initramfs`, put the images
 into `/EFI/boot` and it seems to work fine. The nvidia-drivers package
 installed a `/etc/modprobe.d/nvidia.conf` and whatever else it needed.
 
+# minimal systemd
+
+This is a work in progress.
+
+To see the current state of things, especially how it relates to boot process
+and times:
+
+```
+systemd-analyze
+systemd-analyze blame
+systemd-analyze critical-chain
+```
+
+Now disable some of the most obvious stuff
+
+```
+systemctl mask remote-cryptsetup.target remote-fs.target remote-integritysetup.target remote-veritysetup.target
+systemctl disable systemd-networkd-wait-online.service
+systemctl disable systemd-networkd.service systemd-network-generator.service systemd-networkd-persistent-storage.service systemd-networkd.socket systemd-networkd-varlink.socket
+systemctl disable systemd-nsresourced.service systemd-nsresourced.socket
+```
+
+Some potentially helpful things to disable, but might want to look into use in the future?
+
+```
+systemctl disable systemd-pstore.service systemd-sysext.service systemd-confext.service
+```
+
+Even with dhcpcd+wpa_supplicant (no systemd-networkd), systemd-resolved is helpful for VPN, split DNS, and DNS-over-TLS setups. If none of those apply:
+
+```
+systemctl disable systemd-resolved.service systemd-resolved-varlink.socket systemd-resolved-monitor.socket
+```
+
+Could always disable NTP if you aren't worried about clock drift or DST
+
+```
+systemctl disable systemd-timesyncd.service
+```
+
 # Future Enhancements
 
 A big list of ideas of things I've wanted to try at some point. Some are very
@@ -541,6 +581,11 @@ verbosity of boot messages can be tweaked
 systemd-bootchart will show boot process performance. It requires the `boot` USE
 flag, but this also installs the systemd-boot bootloader, so probably want to
 look at 3rd-party utilities for profiling
+
+systemd-sysext and systemd-confext look interesting and may warrant future
+investigation.
+
+systemd-pstore for debug and tuning info
 
 ## kitty clean exit with disowned process
 
