@@ -674,6 +674,19 @@ and USE flags of nvgen and flattop
 
 # starfighter quirks
 
+- compare key debounce to Ubuntu
+- compare microsd blk device names to Ubuntu
+- enable webcam, test microphone
+- battery use is 1.5W higher at idle after suspend/resume
+- audio amp clicks
+  - turn off soundcard in /sys?
+  - remove/add driver module on demand?
+- `.utils/hypr_lid.sh` causes lockup
+  - could be due to new hyprland version
+- i915 drm GSC proxy dmesg error (after aggressive kernel pruning)
+
+## fixed
+
 - kkey debounce
   - add `i8042.nomux` to kernel command line improves it quite a bit, but not completely
     - completely gone in kitty, but still happens in firefox
@@ -701,15 +714,9 @@ and USE flags of nvgen and flattop
 - no key repeat in console
   - fix with atkbd.softrepeat=1 kernel arg?
   - this went away somehow after installing 98 packages to get hyprland installed
-- audio amp clicks
-  - turn off soundcard in /sys?
-  - remove/add driver module on demand?
 - 7w idle usage
   - powertop helped a bit
   - booted minimal and measured around 4.2W on console with backlight very low
   - now around 5-5.5W in hyprland
   - plugging usb mouse ups it by 0.5W
   - intel EPP (tuned ebuild) package recommended (StarFighter Perplexity space)
-- `.utils/hypr_lid.sh` causes lockup
-  - could be due to new hyprland version
-- i915 drm GSC proxy dmesg error (after aggressive kernel pruning)
