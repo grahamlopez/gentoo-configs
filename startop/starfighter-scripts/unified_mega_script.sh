@@ -177,6 +177,7 @@ sudo -u "$TARGET_USER" upower -d > "$OUTDIR/upower-dump.txt" 2>&1 || echo "upowe
 
 # 10-second, non-interactive HTML + CSV snapshot
 sudo powertop --time=10 --iteration=1 --html=powertop.html --csv=powertop.csv
+mv powertop.csv $OUTDIR
 
 sudo -u "$TARGET_USER" bash -c "cat > '$OUTDIR/notes-user-observations.txt' << 'EOF'
 Idle power on battery (from powertop or upower): ...

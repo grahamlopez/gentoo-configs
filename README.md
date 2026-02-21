@@ -405,12 +405,39 @@ FIXED:
 
 enable savedconfig USE flag, edit in /etc/portage/savedconfig, and reemerge
 
-FIXME: do I need cpu microcode? (<https://wiki.gentoo.org/wiki/Microcode>)
+don't need /boot/amd_uc.img on Intel processors
 
-How do I know if my cpu needs microcode, and if it is being applied?
+The firmware will provide a (possibly outdated) microcode blob for the processor.
+To get the newest, emerge intel-microcode (with `ACCEPT_KEYWORDS=~amd64`) and install (following https://wiki.gentoo.org/wiki/Intel_microcode for Intel microcode)
 
-I see `amd-uc.img` in `/boot` but I don't know if I need to be e.g. adding that
-into the initrd, etc.?
+Get the processory signature fromm `iucode_tool -S` (installed as a dependency of
+intel-microcode) and find the appropriate filenames with `iucode_tool -S -l /lib/firmware/intel-ucode*`
+
+add the output to `/etc/portage/make.conf`. This is the equivalent of savedconfig
+
+```
+MICROCODE_SIGNATURES="-s 0x000c0652"
+```
+
+Then build all the firmware blobs into the kernel at
+
+```
+Device Drivers  --->
+  Generic Driver Options  --->
+    Firmware Loader  --->
+      -*-   Firmware loading facility 
+      (intel-ucode/06-c5-02) Build named firmware blobs into the kernel binary 
+      (/lib/firmware) Firmware blobs root directory
+```
+
+Might as well build in the blobs from `/etc/portage/savedconfig/sys-kernel/linux-firmware` as well
+
+On startop, the relevant part of `.config` looks like:
+
+```
+CONFIG_EXTRA_FIRMWARE="intel-ucode/06-c5-02 regulatory.db regulatory.db.p7s intel/iwlwifi/iwlwifi-ty-a0-gf-a0.pnvm intel/iwlwifi/iwlwifi-ty-a0-gf-a0-89.ucode iwlwifi-ty-a0-gf-a0-89.ucode iwlwifi-ty-a0-gf-a0.pnvm intel/ibt-0041-0041.ddc intel/ibt-0041-0041.sfi i915/mtl_gsc_1.bin i915/mtl_huc_gsc.bin i915/mtl_guc_70.bin i915/mtl_dmc.bin"
+CONFIG_EXTRA_FIRMWARE_DIR="/lib/firmware"
+```
 
 ## nvidia drivers
 
