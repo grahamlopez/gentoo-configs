@@ -459,9 +459,9 @@ installed a `/etc/modprobe.d/nvidia.conf` and whatever else it needed.
 
 # minimal systemd
 
-This is a work in progress.
+## This is a work in progress.
 
-## first pass (starfighter)
+first pass (starfighter)
 
 To see the current state of things, especially how it relates to boot process
 and times:
@@ -501,11 +501,11 @@ systemctl disable systemd-timesyncd.service
 
 # Future Enhancements
 
+## unsorted list
+
 A big list of ideas of things I've wanted to try at some point. Some are very
 low effort, some are very high.
 
-- port omarchy to gentoo
-- touchpad palm rejection for nvgen
 - power profiles and switching
 - define some useful package sets (<https://wiki.gentoo.org/wiki/Package_sets#Custom_sets>)
 - unlock luks root with usb device (storage or yubikey)
@@ -528,6 +528,7 @@ low effort, some are very high.
   - lookinglass for windows
   - https://github.com/quickemu-project/quickemu
   - https://github.com/HikariKnight/QuickPassthrough
+- touchpad palm rejection for nvgen
 
 ## Screen brightness buttons
 
@@ -640,6 +641,7 @@ What creating a package for system configurations?
 
 Things I have wanted at some point in the past:
 
+- machine configs
 - grist
 - nightly neovim
 - version bumped tmux
@@ -692,9 +694,9 @@ and USE flags of nvgen and flattop
         # Remaps the escape key to capslock
         # esc = capslock
 
-        debounce = 25
-        repeat_delay = 700
-        repeat_rate = 15
+        debounce = 50
+        repeat_delay = 800
+        repeat_rate = 10
 
 - no key repeat in console
   - fix with atkbd.softrepeat=1 kernel arg?
