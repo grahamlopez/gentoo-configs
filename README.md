@@ -675,8 +675,9 @@ and USE flags of nvgen and flattop
 # starfighter quirks and todos
 
 - power profiles for battery/ac
-- build in all kernel modules
 - custom initrd
+- further kernel trim (config_debug, etc.)
+- test against dist kernel if any more kernel drivers needed for addtl lm_sensors
 - compare microsd blk device names to Ubuntu
 - enable webcam, test microphone
 - battery use is 1.5W higher at idle after suspend/resume
