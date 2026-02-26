@@ -672,9 +672,11 @@ and USE flags of nvgen and flattop
 <https://wiki.gentoo.org/wiki/Binary_package_guide#Creating_binary_packages>
 <https://www.gentoo.org/news/2024/02/04/x86-64-v3.html>
 
-# starfighter quirks
+# starfighter quirks and todos
 
-- compare key debounce to Ubuntu
+- power profiles for battery/ac
+- build in all kernel modules
+- custom initrd
 - compare microsd blk device names to Ubuntu
 - enable webcam, test microphone
 - battery use is 1.5W higher at idle after suspend/resume
