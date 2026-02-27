@@ -11,6 +11,34 @@ STATE_FILE="$STATE_DIR/battery_since"      # stores: "<start_time> <start_pct>"
 
 hr() { printf '%s\n' "----------------------------------------"; }
 
+print_brightness() {
+  local bl_dir cur max pct
+  bl_dir=""
+
+  # Prefer the first backlight device (often intel_backlight)
+  for d in /sys/class/backlight/*; do
+    [[ -d "$d" ]] || continue
+    bl_dir="$d"
+    break
+  done
+
+  if [[ -z "$bl_dir" ]]; then
+    echo "  Brightness: (no backlight device)"
+    return
+  fi
+
+  cur="$(cat "$bl_dir/brightness" 2>/dev/null || echo "")"
+  max="$(cat "$bl_dir/max_brightness" 2>/dev/null || echo "")"
+
+  if [[ -z "$cur" || -z "$max" || "$max" -eq 0 ]] 2>/dev/null; then
+    echo "  Brightness: (unavailable)"
+    return
+  fi
+
+  pct=$(( cur * 100 / max ))
+  printf '  Brightness: %d%%\n' "$pct"
+}
+
 detect_bat() {
   if [ -d "$BAT0" ]; then
     echo "BAT0"
@@ -163,6 +191,8 @@ if [ -n "$bat" ] && [ -r "/sys/class/power_supply/$bat/status" ]; then
   cur_pct="$bat_cap"
   echo "  Battery:   $bat_status (${bat_cap:-?}%)"
 
+  print_brightness
+
   pw=$(bat_power_w "$bat" 2>/dev/null)
   if [ -n "$pw" ]; then
     echo "  Power:     ${pw} W"
@@ -217,8 +247,7 @@ for dev in $NVME_DEVS; do
     ctrl_name=$(basename "$base")
     pctl="(n/a)"
     [ -r "$ctrl/power/control" ] && pctl=$(cat "$ctrl/power/control")
-    echo "  $ctrl_name:"
-    echo "    power/control: $pctl"
+    echo "  $ctrl_name: power/control: $pctl"
   fi
 done
 hr
