@@ -45,30 +45,16 @@ epp_all_summary() {
   fi
 }
 
-ensure_state_dir() {
-  [ -d "$STATE_DIR" ] || mkdir -p "$STATE_DIR"
-}
-
 battery_elapsed() {
   # $1 = current mode: "ac" or "battery"
   # $2 = current battery percentage (integer or empty)
   cur_state="$1"
   cur_pct="$2"
 
-  ensure_state_dir
+  [ -d "$STATE_DIR" ] || mkdir -p "$STATE_DIR"
   now=$(date +%s)
 
   if [ "$cur_state" = "battery" ]; then
-    # Initialize state when first going on battery
-    if [ ! -f "$STATE_FILE" ]; then
-      # If we do not know current percentage, just store 0
-      [ -z "$cur_pct" ] && cur_pct=0
-      echo "$now $cur_pct" > "$STATE_FILE"
-      echo "00:00:00 (0%% drop)"
-      chmod 666 $STATE_FILE
-      return
-    fi
-
     # Read "start_time start_pct"
     read start_time start_pct 2>/dev/null < "$STATE_FILE"
     [ -z "$start_time" ] && start_time="$now"
@@ -85,11 +71,8 @@ battery_elapsed() {
     else
       drop=0
     fi
-
-    printf "%02d:%02d:%02d (%d%%%% drop)" "$h" "$m" "$s" "$drop"
+    printf "%02d:%02d:%02d (%d%% drop)" "$h" "$m" "$s" "$drop"
   else
-    # On AC: reset timer
-    [ -f "$STATE_FILE" ] && rm -f "$STATE_FILE"
     echo "-"
   fi
 }
