@@ -499,6 +499,452 @@ Could always disable NTP if you aren't worried about clock drift or DST
 systemctl disable systemd-timesyncd.service
 ```
 
+# laptop power profiles
+
+## intro
+
+This is done by writing the correct values to sysfs; see their current values:
+
+```
+cat /sys/devices/system/cpu/intel_pstate/status /sys/devices/system/cpu/intel_pstate/min_perf_pct /sys/devices/system/cpu/intel_pstate/max_perf_pct /sys/devices/system/cpu/intel_pstate/no_turbo
+```
+
+This is automated by monitoring `/sys/class/power_supply/ADP1/online` with udev and triggering a minimal systemd service that calls a script to write to the sysfs values above. I am told that skipping systemd and using udev to call the script is less robust, plus we lose debug logging.
+
+## General power profile setup (cpu only)
+
+The script for `/usr/local/sbin/set-power-profile.sh` (cpu power only)
+``` 
+#!/bin/sh
+# Usage: set-power-profile.sh ac|battery
+
+INTEL_PSTATE_DIR=/sys/devices/system/cpu/intel_pstate
+
+case "$1" in
+  battery)
+    echo 40 > "$INTEL_PSTATE_DIR/max_perf_pct"
+    echo 1  > "$INTEL_PSTATE_DIR/no_turbo"
+    ;;
+  ac)
+    echo 100 > "$INTEL_PSTATE_DIR/max_perf_pct"
+    echo 0   > "$INTEL_PSTATE_DIR/no_turbo"
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+```
+
+systemd template service goes in `/etc/systemd/system/power-profile@.service`
+```
+[Unit]
+Description=Set power profile: %I
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/set-power-profile.sh %I
+```
+
+we also need a service to run at boot to set the correct initial state; goes in `/etc/systemd/system/power-profile-init.service`
+```
+[Unit]
+Description=Set initial power profile based on AC state
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c '\
+  AC_DIR=/sys/class/power_supply/ADP1; \
+  if [ -r "$AC_DIR/online" ] && [ "$(cat "$AC_DIR/online")" = "1" ]; then \
+    /usr/local/sbin/set-power-profile.sh ac; \
+  else \
+    /usr/local/sbin/set-power-profile.sh battery; \
+  fi'
+
+[Install]
+WantedBy=multi-user.target
+```
+and enable it `systemctl enable power-profile-init.service`
+
+Finally, our udev rule to react to AC plug/unplug goes in `/etc/udev/rules.d/99-power-profile.rules`
+```
+SUBSYSTEM=="power_supply", KERNEL=="ADP1", ATTR{online}=="1", \
+  RUN+="/usr/bin/systemctl start power-profile@ac.service"
+
+SUBSYSTEM=="power_supply", KERNEL=="ADP1", ATTR{online}=="0", \
+  RUN+="/usr/bin/systemctl start power-profile@battery.service"
+```
+and reload udev with `udevadm control --reload`
+
+## add nvme and wifi to power profile
+
+modify `/usr/local/sbin/set-power-profile.sh` to
+```
+#!/bin/sh
+# Usage: set-power-profile.sh ac|battery
+
+INTEL_PSTATE_DIR=/sys/devices/system/cpu/intel_pstate
+WIFI_IFACE="wlp1s0"
+NVME_DEVS="nvme0 nvme1"
+
+set_cpu_battery() {
+  echo 40 > "$INTEL_PSTATE_DIR/max_perf_pct"
+  echo 1  > "$INTEL_PSTATE_DIR/no_turbo"
+}
+
+set_cpu_ac() {
+  echo 100 > "$INTEL_PSTATE_DIR/max_perf_pct"
+  echo 0   > "$INTEL_PSTATE_DIR/no_turbo"
+}
+
+set_nvme_battery() {
+  for dev in $NVME_DEVS; do
+    base="/sys/class/nvme/$dev"
+    [ -d "$base" ] || continue
+    echo auto > "$base/device/power/control" 2>/dev/null || true
+  done
+}
+
+set_nvme_ac() {
+  for dev in $NVME_DEVS; do
+    base="/sys/class/nvme/$dev"
+    [ -d "$base" ] || continue
+    echo on > "$base/device/power/control" 2>/dev/null || true
+  done
+}
+
+set_wifi_battery() {
+  iw dev "$WIFI_IFACE" set power_save on 2>/dev/null || true
+}
+
+set_wifi_ac() {
+  iw dev "$WIFI_IFACE" set power_save off 2>/dev/null || true
+}
+
+case "$1" in
+  battery)
+    set_cpu_battery
+    set_nvme_battery
+    set_wifi_battery
+    ;;
+  ac)
+    set_cpu_ac
+    set_nvme_ac
+    set_wifi_ac
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+```
+
+## improved power status reporting script
+
+```
+#!/bin/sh
+
+INTEL_PSTATE_DIR=/sys/devices/system/cpu/intel_pstate
+WIFI_IFACE="wlp1s0"
+NVME_DEVS="nvme0 nvme1"
+AC_PATH="/sys/class/power_supply/ADP1"
+BAT0="/sys/class/power_supply/BAT0"
+BAT1="/sys/class/power_supply/BAT1"
+STATE_DIR="/tmp/power-profile"
+STATE_FILE="$STATE_DIR/battery_since"      # stores: "<start_time> <start_pct>"
+
+hr() { printf '%s\n' "----------------------------------------"; }
+
+detect_bat() {
+  if [ -d "$BAT0" ]; then
+    echo "BAT0"
+  elif [ -d "$BAT1" ]; then
+    echo "BAT1"
+  else
+    echo ""
+  fi
+}
+
+epp_all_summary() {
+  first=""
+  mixed=0
+
+  for p in /sys/devices/system/cpu/cpufreq/policy*/energy_performance_preference; do
+    [ -f "$p" ] || continue
+    val=$(cat "$p" 2>/dev/null) || continue
+    if [ -z "$first" ]; then
+      first="$val"
+    elif [ "$val" != "$first" ]; then
+      mixed=1
+      break
+    fi
+  done
+
+  if [ -z "$first" ]; then
+    echo "(no EPP)"
+  elif [ "$mixed" -eq 0 ]; then
+    echo "$first"
+  else
+    echo "mixed"
+  fi
+}
+
+ensure_state_dir() {
+  [ -d "$STATE_DIR" ] || mkdir -p "$STATE_DIR"
+}
+
+battery_elapsed() {
+  # $1 = current mode: "ac" or "battery"
+  # $2 = current battery percentage (integer or empty)
+  cur_state="$1"
+  cur_pct="$2"
+
+  ensure_state_dir
+  now=$(date +%s)
+
+  if [ "$cur_state" = "battery" ]; then
+    # Initialize state when first going on battery
+    if [ ! -f "$STATE_FILE" ]; then
+      # If we do not know current percentage, just store 0
+      [ -z "$cur_pct" ] && cur_pct=0
+      echo "$now $cur_pct" > "$STATE_FILE"
+      echo "00:00:00 (0%% drop)"
+      return
+    fi
+
+    # Read "start_time start_pct"
+    read start_time start_pct 2>/dev/null < "$STATE_FILE"
+    [ -z "$start_time" ] && start_time="$now"
+    [ -z "$start_pct" ] && start_pct="$cur_pct"
+
+    elapsed=$(( now - start_time ))
+    h=$(( elapsed / 3600 ))
+    m=$(( (elapsed % 3600) / 60 ))
+    s=$(( elapsed % 60 ))
+
+    if [ -n "$cur_pct" ] && [ -n "$start_pct" ]; then
+      drop=$(( start_pct - cur_pct ))
+      [ $drop -lt 0 ] && drop=0
+    else
+      drop=0
+    fi
+
+    printf "%02d:%02d:%02d (%d%%%% drop)" "$h" "$m" "$s" "$drop"
+  else
+    # On AC: reset timer
+    [ -f "$STATE_FILE" ] && rm -f "$STATE_FILE"
+    echo "-"
+  fi
+}
+
+bat_power_w() {
+  bat="$1"
+  [ -n "$bat" ] || return 1
+
+  # Prefer power_now if available (µW)
+  if [ -f "/sys/class/power_supply/$bat/power_now" ]; then
+    pw_uW=$(cat "/sys/class/power_supply/$bat/power_now")
+    echo "$pw_uW" | awk '{ printf "%.2f", $1 / 1000000.0 }'
+    return 0
+  fi
+
+  # Fallback: voltage_now (µV) * current_now (µA) → W
+  if [ -f "/sys/class/power_supply/$bat/voltage_now" ] && \
+     [ -f "/sys/class/power_supply/$bat/current_now" ]; then
+    voltage_uV=$(cat "/sys/class/power_supply/$bat/voltage_now")
+    current_uA=$(cat "/sys/class/power_supply/$bat/current_now")
+    # W = (µA * µV) / 1e12
+    echo "$current_uA $voltage_uV" | awk '{ printf "%.2f", ($1 * $2) / 1e12 }'
+    return 0
+  fi
+
+  return 1
+}
+
+bat_time_remaining() {
+  bat="$1"
+  [ -n "$bat" ] || return 1
+
+  # Use charge_* (µAh) + voltage_now (µV) to estimate energy in Wh
+  if [ -f "/sys/class/power_supply/$bat/charge_now" ] && \
+     [ -f "/sys/class/power_supply/$bat/charge_full" ] && \
+     [ -f "/sys/class/power_supply/$bat/voltage_now" ]; then
+    ch_now_uAh=$(cat "/sys/class/power_supply/$bat/charge_now")
+    v_now_uV=$(cat "/sys/class/power_supply/$bat/voltage_now")
+    # E (Wh) ≈ (charge in Ah) * (voltage in V)
+    # Ah = µAh / 1e6, V = µV / 1e6 → Wh = (µAh * µV) / 1e12
+    en_now_Wh=$(echo "$ch_now_uAh $v_now_uV" | awk '{ printf "%.4f", ($1 * $2) / 1e12 }')
+  elif [ -f "/sys/class/power_supply/$bat/energy_now" ]; then
+    # energy_now is often in µWh → Wh = µWh / 1e6
+    en_now_uWh=$(cat "/sys/class/power_supply/$bat/energy_now")
+    en_now_Wh=$(echo "$en_now_uWh" | awk '{ printf "%.4f", $1 / 1e6 }')
+  else
+    return 1
+  fi
+
+  pw_w=$(bat_power_w "$bat") || return 1
+
+  # hours = Wh / W
+  hours=$(echo "$en_now_Wh $pw_w" | awk '{ if ($2 == 0) print 0; else printf "%.4f", $1 / $2 }')
+  # seconds = hours * 3600
+  seconds=$(echo "$hours" | awk '{ printf "%.0f", $1 * 3600 }')
+
+  h=$(( seconds / 3600 ))
+  m=$(( (seconds % 3600) / 60 ))
+  s=$(( seconds % 60 ))
+
+  printf "%02d:%02d:%02d" "$h" "$m" "$s"
+}
+
+echo "Power status overview"
+hr
+
+# AC / Battery + wattage + time remaining
+echo "AC / Battery:"
+bat=$(detect_bat)
+cur_mode="ac"
+cur_pct=""
+
+if [ -r "$AC_PATH/online" ]; then
+  ac=$(cat "$AC_PATH/online")
+  if [ "$ac" = "1" ]; then
+    ac_state="AC online"
+    cur_mode="ac"
+  else
+    ac_state="On battery"
+    cur_mode="battery"
+  fi
+  echo "  AC adapter: $ac_state"
+fi
+
+if [ -n "$bat" ] && [ -r "/sys/class/power_supply/$bat/status" ]; then
+  bat_status=$(cat "/sys/class/power_supply/$bat/status")
+  bat_cap=$(cat "/sys/class/power_supply/$bat/capacity" 2>/dev/null)
+  cur_pct="$bat_cap"
+  echo "  Battery:   $bat_status (${bat_cap:-?}%)"
+
+  pw=$(bat_power_w "$bat" 2>/dev/null)
+  if [ -n "$pw" ]; then
+    echo "  Power:     ${pw} W"
+  fi
+
+  # Only show time remaining when discharging and we have power
+  if [ "$bat_status" = "Discharging" ] && [ -n "$pw" ]; then
+    tr=$(bat_time_remaining "$bat" 2>/dev/null)
+    [ -n "$tr" ] && echo "  Time left: ${tr} (approx)"
+  fi
+fi
+
+elapsed=$(battery_elapsed "$cur_mode" "$cur_pct")
+[ "$elapsed" != "-" ] && echo "  Time on battery: $elapsed"
+hr
+
+# CPU
+echo "CPU (Intel P-state):"
+if [ -d "$INTEL_PSTATE_DIR" ]; then
+  status=$(cat "$INTEL_PSTATE_DIR/status")
+  minp=$(cat "$INTEL_PSTATE_DIR/min_perf_pct")
+  maxp=$(cat "$INTEL_PSTATE_DIR/max_perf_pct")
+  noturbo=$(cat "$INTEL_PSTATE_DIR/no_turbo")
+  echo "  Status:        $status"
+  echo "  Min perf pct:  $minp"
+  echo "  Max perf pct:  $maxp"
+  echo "  Turbo disabled: $noturbo"
+fi
+
+if [ -d /sys/devices/system/cpu/cpufreq/policy0 ]; then
+  gov=$(cat /sys/devices/system/cpu/cpufreq/policy0/scaling_governor)
+  cur_khz=$(cat /sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq)
+  cur_mhz=$(awk "BEGIN { printf \"%.1f\", $cur_khz / 1000.0 }")
+  epp_path=/sys/devices/system/cpu/cpufreq/policy0/energy_performance_preference
+  [ -r "$epp_path" ] && epp=$(cat "$epp_path") || epp="(no EPP)"
+  echo "  Governor:      $gov"
+  echo "  Cur freq MHz:  $cur_mhz"
+  echo "  EPP policy0:   $epp"
+fi
+
+epp_all=$(epp_all_summary)
+echo "  EPP all:       $epp_all"
+hr
+
+
+# NVMe
+echo "NVMe devices:"
+for dev in $NVME_DEVS; do
+  base="/sys/class/nvme/$dev"
+  if [ -d "$base" ]; then
+    ctrl="$base/device"
+    ctrl_name=$(basename "$base")
+    pctl="(n/a)"
+    [ -r "$ctrl/power/control" ] && pctl=$(cat "$ctrl/power/control")
+    echo "  $ctrl_name:"
+    echo "    power/control: $pctl"
+  fi
+done
+hr
+
+# Wi‑Fi
+echo "Wi-Fi ($WIFI_IFACE):"
+if ip link show "$WIFI_IFACE" >/dev/null 2>&1; then
+  state=$(ip link show "$WIFI_IFACE" | awk '/state/ {print $9}')
+  echo "  Link state: $state"
+  ps_line=$(iw dev "$WIFI_IFACE" get power_save 2>/dev/null | sed 's/^[[:space:]]*//')
+  [ -n "$ps_line" ] && echo "  $ps_line" || echo "  Power save: (unknown)"
+else
+  echo "  Interface not found"
+fi
+hr
+
+```
+
+## add auto powertop adjustments
+
+here is a `/usr/local/sbin/powertop-tunables.sh`
+```
+#!/bin/sh
+
+# A safer subset than the powertop --autotune
+
+# USB autosuspend for non-critical devices
+for dev in /sys/bus/usb/devices/*/power/control; do
+  [ -f "$dev" ] || continue
+  echo auto > "$dev" 2>/dev/null || true
+done
+
+# Runtime PM for PCI devices
+for dev in /sys/bus/pci/devices/*/power/control; do
+  [ -f "$dev" ] || continue
+  # Leave GPUs and root ports alone for now
+  case "$dev" in
+    *0000:00:02.0/power/control)  # iGPU on your box
+      continue
+      ;;
+  esac
+  echo auto > "$dev" 2>/dev/null || true
+done
+
+# Enable autosuspend for Bluetooth and other HID where possible
+for f in /sys/bus/usb/devices/*/power/autosuspend; do
+  [ -f "$f" ] || continue
+  echo 2 > "$f" 2>/dev/null || true
+done
+
+# Audio power saving (HDA)
+if [ -f /sys/module/snd_hda_intel/parameters/power_save ]; then
+  echo 1  > /sys/module/snd_hda_intel/parameters/power_save 2>/dev/null || true
+fi
+if [ -f /sys/module/snd_hda_intel/parameters/power_save_controller ]; then
+  echo Y  > /sys/module/snd_hda_intel/parameters/power_save_controller 2>/dev/null || true
+fi
+
+# SATA / AHCI (if any; mostly for docking or external bays)
+for host in /sys/class/scsi_host/host*/link_power_management_policy; do
+  [ -f "$host" ] || continue
+  echo med_power_with_dipm > "$host" 2>/dev/null || true
+done
+```
+and add an `ExecStart=` line to `/etc/systemd/system/power-profile-init.service` so it fires at boot
+
 # Future Enhancements
 
 ## unsorted list
@@ -674,7 +1120,6 @@ and USE flags of nvgen and flattop
 
 # starfighter quirks and todos
 
-- power profiles for battery/ac
 - custom initrd
 - further kernel trim (config_debug, etc.)
 - test against dist kernel if any more kernel drivers needed for addtl lm_sensors
