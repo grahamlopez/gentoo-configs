@@ -1265,9 +1265,9 @@ and USE flags of nvgen and flattop
 
 # starfighter quirks and todos
 
-- custom initrd
 - why does `acpi -bi` report "Not Charging" when plugged in?
 - further kernel trim (config_debug, etc.)
+- delay devices until userspace on-demand (like bluetooth on systemd services start, wifi after hyprland, etc.)
 - test against dist kernel if any more kernel drivers needed for addtl lm_sensors
 - compare microsd blk device names to Ubuntu
 - enable webcam, test microphone
