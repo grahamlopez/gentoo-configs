@@ -389,12 +389,15 @@ Here is the recipe:
 - build the kernel with `KCFLAGS="-march=native -O2 -pipe" make -j12`
 - install modules with `make modules_install INSTALL_MOD_STRIP=1`
   - this noticeably affects boot speed
-- generate an initrd with `genkernel --luks initramfs`
+- generate an initrd with `genkernel --luks --no-compress-initramfs initramfs`
 - copy the generated initrd to `/root/initrd-<whatever>.cpio.xz` (or whatever compression)
+- uncompress the initrd image with `unxz`
 - add the path to the initrd to CONFIG_INITRAMFS_SOURCE
 - rebuild the kernel
 - `cp arch/x86/boot/bzImage /boot/EFI/boot/boot64x.efi`
 - `efibootmgr --create --disk /dev/nvme0n1 --part 1 --label "gentoo" --loader /EFI/boot/bootx64.efi`
+
+Note: recently I like to disable the initramfs compression in the kernel so that decompression isn't needed at boot. This also means that `unxz` is needed between `genkernel --luks initramfs` and building it into the kernel
 
 ## Firmware
 
@@ -438,6 +441,23 @@ On startop, the relevant part of `.config` looks like:
 CONFIG_EXTRA_FIRMWARE="intel-ucode/06-c5-02 regulatory.db regulatory.db.p7s intel/iwlwifi/iwlwifi-ty-a0-gf-a0.pnvm intel/iwlwifi/iwlwifi-ty-a0-gf-a0-89.ucode iwlwifi-ty-a0-gf-a0-89.ucode iwlwifi-ty-a0-gf-a0.pnvm intel/ibt-0041-0041.ddc intel/ibt-0041-0041.sfi i915/mtl_gsc_1.bin i915/mtl_huc_gsc.bin i915/mtl_guc_70.bin i915/mtl_dmc.bin"
 CONFIG_EXTRA_FIRMWARE_DIR="/lib/firmware"
 ```
+
+## custom initrd
+
+The kernel configured for the `genkernel` produced initramfs is ready for our custom initrd.
+
+The next requirement is a fully static build of `cryptsetup` and `busybox`. We'll use portage for this, but it is going to want to build static dependencies as well. So the overview procedure is:
+
+1. Ask portage to build/install to a different path, using `--oneshot` to keep it out of the world file
+2. accept the changes to `/etc/portage/package.use` required for the build
+3. do the build
+4. back out the changes to `/etc/portage/package.use`. Can confirm this with a `emerge -puvDN @world` afterwords
+
+### building static binaries
+
+This is a bit more complicated than it seems at first. In Sakaki's guide back in the day, she simply set `USE="static"` etc. for cryptsetup, but nowadays udev must be disabled (due to upstream issues) for a static cryptsetup build. While this *should* be okay for the system cryptsetup, I'm not going to go that route for now.
+
+So we have to play games with either building it by hand, including all of its dependencies' static versions, or else use an alternate root for portage which pulls in 200+ dependencies to get the job done.
 
 ## nvidia drivers
 
@@ -1121,6 +1141,7 @@ and USE flags of nvgen and flattop
 # starfighter quirks and todos
 
 - custom initrd
+- why does `acpi -bi` report "Not Charging" when plugged in?
 - further kernel trim (config_debug, etc.)
 - test against dist kernel if any more kernel drivers needed for addtl lm_sensors
 - compare microsd blk device names to Ubuntu
