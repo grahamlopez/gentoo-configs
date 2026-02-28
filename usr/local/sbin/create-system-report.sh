@@ -653,3 +653,4 @@ fi
 
 log_info "Done. Markdown report: $MD_FILE"
 log_info "Additional artifacts are in $OUTDIR"
+log_info "Recommend also gathering full kernel .confg/defconfig"
