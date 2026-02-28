@@ -92,7 +92,7 @@ If building a static `cryptsetup` proves difficult with the default `gcrypt` bac
 
 ***
 
-## Building the Initramfs
+:# Building the Initramfs
 
 ### Directory Structure
 
@@ -138,6 +138,8 @@ ln -s busybox mdev
 ### The `/init` Script
 
 This is the heart of the initramfs. Create `/usr/src/initramfs/init`:[^6][^3][^1]
+
+(See "Advancced" section for new `init` with updates to use existing `crypt_root=UUID=` and `root=UUID=` kernel command line parameters
 
 ```bash
 #!/bin/busybox sh
@@ -353,6 +355,137 @@ for param in $(cat /proc/cmdline); do
     esac
 done
 cryptsetup luksOpen "$luks_source" "$luks_name" || rescue_shell
+```
+
+Here is a full new version of init adapted to both `crypt_root` and `root`.
+
+```
+#!/bin/busybox sh
+export PATH="/bin:/sbin"
+
+mount -t proc     proc     /proc
+mount -t sysfs    sysfs    /sys
+mount -t devtmpfs devtmpfs /dev
+
+rescue_shell() {
+    echo "Dropping to rescue shell"
+    busybox --install -s /bin
+    exec /bin/sh
+}
+
+luks_source=""
+root_spec=""
+rootfstype="ext4"   # default; override via rootfstype=
+
+for param in $(cat /proc/cmdline); do
+    case "$param" in
+        crypt_root=*)
+            crypt_spec="${param#crypt_root=}"
+            luks_source="$crypt_spec"
+            case "$luks_source" in
+                UUID=*)
+                    luks_source="/dev/disk/by-uuid/${luks_source#UUID=}"
+                    ;;
+            esac
+            ;;
+        root=*)
+            root_spec="${param#root=}"
+            case "$root_spec" in
+                UUID=*)
+                    root_spec="/dev/disk/by-uuid/${root_spec#UUID=}"
+                    ;;
+            esac
+            ;;
+        rootfstype=*)
+            rootfstype="${param#rootfstype=}"
+            ;;
+    esac
+done
+
+[ -z "$luks_source" ] && echo "No crypt_root= found" && rescue_shell
+[ -z "$root_spec" ] && echo "No root= found" && rescue_shell
+
+# Populate /dev/disk/by-uuid etc.
+# echo /bin/mdev > /proc/sys/kernel/hotplug
+mdev -s
+
+cryptsetup luksOpen "$luks_source" luksroot || rescue_shell
+
+# If root=UUID points directly at the decrypted fs, use that.
+# If you prefer always using the mapper, you can instead hardcode /dev/mapper/luksroot.
+mount -t "$rootfstype" -o ro "$root_spec" /mnt/root || rescue_shell
+
+umount /proc
+umount /sys
+umount /dev
+
+exec switch_root /mnt/root /sbin/init
+```
+This didn't end up working as the by-disk/uuid's weren't being populated. Went with a simpler approach for now. This script booted:
+```
+#!/bin/busybox sh
+export PATH="/bin:/sbin"
+
+# Mount virtual filesystems
+mount -t proc     proc     /proc
+mount -t sysfs    sysfs    /sys
+mount -t devtmpfs devtmpfs /dev
+
+rescue_shell() {
+    echo "Dropping to rescue shell"
+    exec /bin/busybox sh
+}
+
+# Find a LUKS container device by its LUKS UUID
+find_luks_by_uuid() {
+    target_uuid="$1"
+    for dev in /dev/sd?* /dev/nvme?n?p* /dev/vd?*; do
+        [ -b "$dev" ] || continue
+        uuid="$(cryptsetup luksUUID "$dev" 2>/dev/null || true)"
+        [ -n "$uuid" ] || continue
+        [ "$uuid" = "$target_uuid" ] && { echo "$dev"; return 0; }
+    done
+    return 1
+}
+
+luks_uuid=""
+rootfstype="ext4"
+
+# Parse kernel command line
+for param in $(cat /proc/cmdline); do
+    case "$param" in
+        crypt_root=UUID=*)
+            luks_uuid="${param#crypt_root=UUID=}"
+            ;;
+        rootfstype=*)
+            rootfstype="${param#rootfstype=}"
+            ;;
+    esac
+done
+
+[ -z "$luks_uuid" ] && echo "No crypt_root=UUID= found" && rescue_shell
+
+# Optional: populate /dev from sysfs (not strictly required for luksUUID)
+mdev -s
+
+CRYPTSETUP=/sbin/cryptsetup
+[ ! -x "$CRYPTSETUP" ] && echo "cryptsetup missing" && rescue_shell
+
+luks_source="$(find_luks_by_uuid "$luks_uuid")" || {
+    echo "Could not find LUKS device with LUKS UUID=$luks_uuid"
+    rescue_shell
+}
+
+"$CRYPTSETUP" luksOpen "$luks_source" luksroot || rescue_shell
+
+# Hardcode root as the filesystem inside the mapper
+mount -t "$rootfstype" -o ro /dev/mapper/luksroot /mnt/root || rescue_shell
+
+umount /proc
+umount /sys
+umount /dev
+
+exec switch_root /mnt/root /sbin/init
 ```
 
 ### Keyfile Support

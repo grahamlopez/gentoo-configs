@@ -542,12 +542,76 @@ run_cmd_if_exists_to_file "cat /proc/cmdline" \
 cat >"$OUTDIR/notes-kernel-install.txt" <<'EOF'
 starting with sys-kernel/gentoo-sources
 
+- create custom initramfs with static cryptsetup, busybox, and hand-written init:
+```
+#!/bin/busybox sh
+export PATH="/bin:/sbin"
+
+# Mount virtual filesystems
+mount -t proc     proc     /proc
+mount -t sysfs    sysfs    /sys
+mount -t devtmpfs devtmpfs /dev
+
+rescue_shell() {
+    echo "Dropping to rescue shell"
+    exec /bin/busybox sh
+}
+
+# Find a LUKS container device by its LUKS UUID
+find_luks_by_uuid() {
+    target_uuid="$1"
+    for dev in /dev/sd?* /dev/nvme?n?p* /dev/vd?*; do
+        [ -b "$dev" ] || continue
+        uuid="$(cryptsetup luksUUID "$dev" 2>/dev/null || true)"
+        [ -n "$uuid" ] || continue
+        [ "$uuid" = "$target_uuid" ] && { echo "$dev"; return 0; }
+    done
+    return 1
+}
+
+luks_uuid=""
+rootfstype="ext4"
+
+# Parse kernel command line
+for param in $(cat /proc/cmdline); do
+    case "$param" in
+        crypt_root=UUID=*)
+            luks_uuid="${param#crypt_root=UUID=}"
+            ;;
+        rootfstype=*)
+            rootfstype="${param#rootfstype=}"
+            ;;
+    esac
+done
+
+[ -z "$luks_uuid" ] && echo "No crypt_root=UUID= found" && rescue_shell
+
+# Optional: populate /dev from sysfs (not strictly required for luksUUID)
+mdev -s
+
+CRYPTSETUP=/sbin/cryptsetup
+[ ! -x "$CRYPTSETUP" ] && echo "cryptsetup missing" && rescue_shell
+
+luks_source="$(find_luks_by_uuid "$luks_uuid")" || {
+    echo "Could not find LUKS device with LUKS UUID=$luks_uuid"
+    rescue_shell
+}
+
+"$CRYPTSETUP" luksOpen "$luks_source" luksroot || rescue_shell
+
+# Hardcode root as the filesystem inside the mapper
+mount -t "$rootfstype" -o ro /dev/mapper/luksroot /mnt/root || rescue_shell
+
+umount /proc
+umount /sys
+umount /dev
+
+exec switch_root /mnt/root /sbin/init
+```
 - cd /usr/src/linux
 - make menuconfig
 - KCFLAGS="-march-native -02 -pipe" make -j12
 - make modules_install INSTALL_MOD_STRIP=1
-- genkernel --luks initramfs
-- cp /boot/initramfs-* ~/initrd-lopez.cpio.xz
 - KCFLAGS="-march-native -02 -pipe" make -j12
 - cp arch/x86/boot/bzImage /boot/EFI/boot/boot64x.efi
 EOF

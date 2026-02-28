@@ -444,7 +444,9 @@ CONFIG_EXTRA_FIRMWARE_DIR="/lib/firmware"
 
 ## custom initrd
 
-The kernel configured for the `genkernel` produced initramfs is ready for our custom initrd.
+The kernel configured for the `genkernel` produced initramfs is ready for our custom initrd. By the end, one could remove the `root=` argument from `CONFIG_CMDLINE`.
+
+### building static binaries
 
 The next requirement is a fully static build of `cryptsetup` and `busybox`. We'll use portage for this, but it is going to want to build static dependencies as well. So the overview procedure is:
 
@@ -453,11 +455,134 @@ The next requirement is a fully static build of `cryptsetup` and `busybox`. We'l
 3. do the build
 4. back out the changes to `/etc/portage/package.use`. Can confirm this with a `emerge -puvDN @world` afterwords
 
-### building static binaries
-
 This is a bit more complicated than it seems at first. In Sakaki's guide back in the day, she simply set `USE="static"` etc. for cryptsetup, but nowadays udev must be disabled (due to upstream issues) for a static cryptsetup build. While this *should* be okay for the system cryptsetup, I'm not going to go that route for now.
 
 So we have to play games with either building it by hand, including all of its dependencies' static versions, or else use an alternate root for portage which pulls in 200+ dependencies to get the job done.
+
+For now, I am going with the former option of building static `cryptsetup` and `busybox` by hand. The script `build_static_utils.sh` is in the repo.
+
+### assemble the initramfs
+
+Create the working directory that will become the initramfs root:
+
+```bash
+mkdir -p /usr/src/initramfs/{bin,dev,etc,lib,lib64,mnt/root,proc,root,sbin,sys,run}
+```
+
+Copy essential device nodes. These must exist before `/dev` is populated dynamically:
+
+```bash
+cp -a /dev/{null,console,tty,random,urandom} /usr/src/initramfs/dev/
+```
+
+For the LUKS partition, either copy the specific block device node (e.g., `/dev/nvme0n1p2` or `/dev/sda2`) or use `devtmpfs`/`mdev` to populate devices dynamically at boot. The `devtmpfs` approach is strongly recommended because it eliminates hardcoded device paths:
+
+```bash
+# In /init, mount devtmpfs instead of copying block device nodes:
+mount -t devtmpfs devtmpfs /dev
+```
+
+Copy the static binaries and create busybox symlinks:
+
+```bash
+cp /bin/busybox /usr/src/initramfs/bin/busybox
+cp /sbin/cryptsetup /usr/src/initramfs/sbin/cryptsetup
+
+cd /usr/src/initramfs/bin
+ln -s busybox sh
+ln -s busybox mount
+ln -s busybox umount
+ln -s busybox switch_root
+ln -s busybox sleep
+ln -s busybox cat
+ln -s busybox mdev
+```
+
+The init script is the heart of the initramfs. Create `/usr/src/initramfs/init`:
+
+```
+#!/bin/busybox sh
+export PATH="/bin:/sbin"
+
+# Mount virtual filesystems
+mount -t proc     proc     /proc
+mount -t sysfs    sysfs    /sys
+mount -t devtmpfs devtmpfs /dev
+
+rescue_shell() {
+    echo "Dropping to rescue shell"
+    exec /bin/busybox sh
+}
+
+# Find a LUKS container device by its LUKS UUID
+find_luks_by_uuid() {
+    target_uuid="$1"
+    for dev in /dev/sd?* /dev/nvme?n?p* /dev/vd?*; do
+        [ -b "$dev" ] || continue
+        uuid="$(cryptsetup luksUUID "$dev" 2>/dev/null || true)"
+        [ -n "$uuid" ] || continue
+        [ "$uuid" = "$target_uuid" ] && { echo "$dev"; return 0; }
+    done
+    return 1
+}
+
+luks_uuid=""
+rootfstype="ext4"
+
+# Parse kernel command line
+for param in $(cat /proc/cmdline); do
+    case "$param" in
+        crypt_root=UUID=*)
+            luks_uuid="${param#crypt_root=UUID=}"
+            ;;
+        rootfstype=*)
+            rootfstype="${param#rootfstype=}"
+            ;;
+    esac
+done
+
+[ -z "$luks_uuid" ] && echo "No crypt_root=UUID= found" && rescue_shell
+
+# Optional: populate /dev from sysfs (not strictly required for luksUUID)
+mdev -s
+
+CRYPTSETUP=/sbin/cryptsetup
+[ ! -x "$CRYPTSETUP" ] && echo "cryptsetup missing" && rescue_shell
+
+luks_source="$(find_luks_by_uuid "$luks_uuid")" || {
+    echo "Could not find LUKS device with LUKS UUID=$luks_uuid"
+    rescue_shell
+}
+
+"$CRYPTSETUP" luksOpen "$luks_source" luksroot || rescue_shell
+
+# Hardcode root as the filesystem inside the mapper
+mount -t "$rootfstype" -o ro /dev/mapper/luksroot /mnt/root || rescue_shell
+
+umount /proc
+umount /sys
+umount /dev
+
+exec switch_root /mnt/root /sbin/init
+```
+
+### package the initramfs
+
+Option 1: build it into the kernel as usual. 
+
+Simply put the path to the initramfs directory tree in `CONFIG_INITRAMFS_SOURCE` and rebuild the kernel.
+
+Option 2: have a separate initrd file
+
+This is helpful for quickly testing initramfs changes without needing to rebuild/link the kernel. Blank out `CONFIG_INITRAMFS_SOURCE`, add `initrd=/EFI/boot/initrd` to `CONFIG_CMDLINE`, and build the file with
+```
+cd /usr/src/initramfs
+find . -print0 | cpio --null -ov --format=newc > /boot/EFI/boot/initrd 
+```
+(or if you want compression)
+```
+find . -print0 | cpio --null -ov --format=newc | gzip -9 > /boot/initramfs.cpio.gz
+```
 
 ## nvidia drivers
 
