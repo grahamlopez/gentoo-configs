@@ -14,7 +14,7 @@
 set -euo pipefail
 
 # Parse arguments: accept [FILE] [N] in either order, file detected by existence
-N=20
+N=12
 FILE=""
 
 for arg in "$@"; do

@@ -554,10 +554,14 @@ luks_source="$(find_luks_by_uuid "$luks_uuid")" || {
     rescue_shell
 }
 
+echo "<6>[initramfs] Starting LUKS root unlock" > /dev/kmsg
+
 "$CRYPTSETUP" luksOpen "$luks_source" luksroot || rescue_shell
 
+echo "<6>[initramfs] mounting rw /dev/mapper/luksroot" > /dev/kmsg
+
 # Hardcode root as the filesystem inside the mapper
-mount -t "$rootfstype" -o ro /dev/mapper/luksroot /mnt/root || rescue_shell
+mount -t "$rootfstype" -o rw /dev/mapper/luksroot /mnt/root || rescue_shell
 
 umount /proc
 umount /sys
