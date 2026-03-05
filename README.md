@@ -135,14 +135,37 @@ it is the case on flattop, so going with it for now.
 systemctl disable systemd-userdbd
 ```
 
-- blacklist nouveau in `/etc/modprobe.d/blacklist.conf` -`echo auto > /sys/bus/pci/devices/0000\:01\:00.0/power/control`
+- `blacklist nouveau` in `/etc/modprobe.d/blacklist.conf` 
+    - bake that blacklist into the initrd `genkernel --luks initramfs`
+    - confirm with lsinitrd | grep blacklist
+-`echo auto > /sys/bus/pci/devices/0000\:01\:00.0/power/control`
 - to automate, write
 
   ```
   w /sys/bus/pci/devices/0000:01:00.0/power/control - - - - auto
   ```
-
   to `/etc/tmpfiles.d/nvidia-power.conf`
+
+- can also completely remove the card from the PCI bus. Write to `/etc/udev/rules.d/00-remove-nvidia.rules`:
+    ```
+    # Remove NVIDIA USB xHCI Host Controller devices, if present
+    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330", ATTR{power/control}="auto", ATTR{remove}="1"
+    
+    # Remove NVIDIA USB Type-C UCSI devices, if present
+    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000", ATTR{power/control}="auto", ATTR{remove}="1"
+    
+    # Remove NVIDIA Audio devices, if present
+    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300", ATTR{power/control}="auto", ATTR{remove}="1"
+    
+    # Remove NVIDIA VGA/3D controller devices
+    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", ATTR{power/control}="auto", ATTR{remove}="1"
+    ```
+
+Opacity wasn't working in hyprland on thinktop. I blacklisted `xe` module, and now there's a race condition at hyprland start so that opacity shows up if I open hyprland.conf and save it (without changing anything). If I put my wallpaper where hyprland expects to find it, everything works fine.
+
+    if hyprpaper failed to load a wallpaper, the compositor’s early rendering path was slightly different, and your decoration opacity only took effect once the config was re-parsed.
+
+    Now that hyprpaper finds the wallpaper and starts cleanly, Hyprland’s render state is stable from the beginning, so the decoration opacities apply correctly on first launch without needing a manual or scripted reload
 
 ## configure pcloud via rclone
 
@@ -1318,3 +1341,37 @@ and USE flags of nvgen and flattop
   - now around 5-5.5W in hyprland
   - plugging usb mouse ups it by 0.5W
   - intel EPP (tuned ebuild) package recommended (StarFighter Perplexity space)
+
+# thinktop
+
+## issues
+
+- graphics, nouveau etc
+- hyprland opacity not working
+- sound sof firmware
+- firmeware bloatware
+
+# install friction
+
+- ssh keys and proton passwords
+- package sets
+    - install utilities
+    - basic utilities
+    - graphical environment
+- getting configs in place
+    - console and keyd keymaps
+    - root dotfiles: zsh, tmux
+        - stripped down nvim
+    - wpa_supplicant
+    - graham dotfiles because of ssh key
+    - /etc/hosts
+    - sudo, autologin, auto hyprland
+    - switch root shell to zsh
+- disable systemd stuff
+- graphics setup
+    - disable nouveau
+    - set up auto power for gpu
+- getting local/apps/{tmux,neovim} installed
+    - easy enough from source
+- putting /usr/local/bin scripts in place
+

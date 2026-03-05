@@ -516,7 +516,7 @@ append_section "loginctl Session/User Info" "" "$TEMP_DIR/loginctl-info.txt"
   echo
   if [ -f "$TARGET_HOME/.config/hypr/hyprland.conf" ]; then
     echo "Hyprland config: $TARGET_HOME/.config/hypr/hyprland.conf"
-    cp "$TARGET_HOME/.config/hypr/hyprland.conf" "$OUTDIR/hyprland.conf"
+    cp "$TARGET_HOME/.config/hypr/hyprland.conf" "$OUTDIR/hyprland.conf.txt"
   else
     echo "Hyprland config not found at $TARGET_HOME/.config/hypr/hyprland.conf"
   fi
