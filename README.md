@@ -1117,6 +1117,14 @@ done
 ```
 and add an `ExecStart=` line to `/etc/systemd/system/power-profile-init.service` so it fires at boot
 
+# package management
+
+## package sets
+
+To see the current list of available sets, `emerge --list-sets`
+
+Define sets in `/etc/portage/sets` with the name of the file as the set name, and one atom per line
+
 # Future Enhancements
 
 ## unsorted list
@@ -1259,16 +1267,19 @@ What creating a package for system configurations?
 
 Things I have wanted at some point in the past:
 
-- machine configs
-- grist
+- ncdu without llvm deps
+  - https://dev.yorhel.nl/ncdu
 - nightly neovim
 - version bumped tmux
 - yt-dlp
-- impala
+- impala https://github.com/pythops/impala
+- miniconda
+- npm
+- machine configs
+- grist
 - kmonad binary release (alternatives: kanata, keyd)
 - sasl oauth2 plugin
 - onlykey app
-- miniconda
 - nvhpc
 - config files
 - freeplane
@@ -1347,21 +1358,20 @@ and USE flags of nvgen and flattop
 ## issues
 
 - add clipboard script to repo
-- sound sof firmware
-- firmeware bloatware
 
 # install friction
 
-- ssh keys and proton passwords
-- package sets
-    - install utilities
-    - basic utilities
-    - graphical environment
+- ssh keys, proton passwords, wpa_supplicant, yubikeys, luks keyfiles
+- firmware and kernel savedconfigs
 - getting configs in place
+    - portage configs
+        - make.conf
+        - package.accept_keywords
+        - package.use
+        - sets
     - console and keyd keymaps
     - root dotfiles: zsh, tmux
         - stripped down nvim
-    - wpa_supplicant
     - graham dotfiles because of ssh key
     - /etc/hosts
     - sudo, autologin, auto hyprland
@@ -1370,7 +1380,11 @@ and USE flags of nvgen and flattop
 - graphics setup
     - disable nouveau
     - set up auto power for gpu
+- fonts setup
+    - minimize but get everything
+    - nerd fonts, kaomoji, greek
 - getting local/apps/{tmux,neovim} installed
     - easy enough from source
 - putting /usr/local/bin scripts in place
+- touchpad multigestures
 

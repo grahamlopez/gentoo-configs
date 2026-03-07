@@ -17,18 +17,13 @@
 127.0.0.1	localhost
 ::1		localhost
 
-#
-# Imaginary network.
-#10.0.0.2               myname
-#10.0.0.3               myfriend
-
-192.168.1.1		udm
-192.168.1.101		truenas
-#192.168.1.102		gza
-192.168.1.103		gza
-192.168.1.104		flattop
-192.168.1.105		starlab
-192.168.1.106		nvgen
+192.168.1.1		  udm
+192.168.1.101		beenas
+192.168.1.103		bequiet
+192.168.1.110		flattop
+192.168.1.111		startop
+192.168.1.112		thinktop
+192.168.1.113		nvgen
 
 #
 # According to RFC 1918, you can use the following IP networks for private 
