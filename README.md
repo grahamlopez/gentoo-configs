@@ -1125,6 +1125,19 @@ To see the current list of available sets, `emerge --list-sets`
 
 Define sets in `/etc/portage/sets` with the name of the file as the set name, and one atom per line
 
+# Networking
+
+## Proton VPN
+
+Here's the current setup:
+
+1. Log in to Proton VPN web interface and make a wireguard config.
+2. `emerge wireguard-tools` - Pay attention to the kernel config requirements
+3. put config in `/etc/wireguard`, owned by root, perms 600. Ensure filename is under 15 chars e.g. `pvpn-us-ga.conf`
+4. `wg-quick up/down pvpn-us-ga` 
+5. check connection with `wg show`
+6. `curl https://ip.me` (will probably show ipv6 if the website prefers it) `curl -4 https://ip.me` or `curl -4 https://ipconfig.co`
+
 # Future Enhancements
 
 ## unsorted list
@@ -1132,19 +1145,14 @@ Define sets in `/etc/portage/sets` with the name of the file as the set name, an
 A big list of ideas of things I've wanted to try at some point. Some are very
 low effort, some are very high.
 
-- power profiles and switching
-- define some useful package sets (<https://wiki.gentoo.org/wiki/Package_sets#Custom_sets>)
 - unlock luks root with usb device (storage or yubikey)
     - [about TPM unlock](https://blastrock.github.io/fde-tpm-sb.html)
 - external monitors in hyprland
 - keychain for ssh key (or yubikey)
-- enable (proton) vpn
 - build up from smaller (non-desktop) profile
 - telescope search icons in nvim for "disk" and see many squares and kanji
 - screenlocking and fingerprint reader
 - user mount removable devices
-- boot aesthetics: speed, plymouth and disk unlock
-    - start with systemd-analyze
 - more theming (with fast/auto switching): wallpaper+colors/pywal16+fonts
 - virutalization:
   - qemu for kernel/boot debugging
@@ -1154,7 +1162,7 @@ low effort, some are very high.
   - lookinglass for windows
   - https://github.com/quickemu-project/quickemu
   - https://github.com/HikariKnight/QuickPassthrough
-- touchpad palm rejection for nvgen
+- touchpad palm rejection for nvgen and multigestures
 
 ## Screen brightness buttons
 
@@ -1387,4 +1395,4 @@ and USE flags of nvgen and flattop
     - easy enough from source
 - putting /usr/local/bin scripts in place
 - touchpad multigestures
-
+- screen brightness buttons
