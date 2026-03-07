@@ -1138,6 +1138,11 @@ Here's the current setup:
 5. check connection with `wg show`
 6. `curl https://ip.me` (will probably show ipv6 if the website prefers it) `curl -4 https://ip.me` or `curl -4 https://ipconfig.co`
 
+# secrets management
+
+- ssh keys, proton passwords, wpa_supplicant, yubikeys, luks keyfiles
+    - https://protonpass.github.io/pass-cli/get-started/configuration/#secure-key-storage
+
 # Future Enhancements
 
 ## unsorted list
@@ -1145,10 +1150,10 @@ Here's the current setup:
 A big list of ideas of things I've wanted to try at some point. Some are very
 low effort, some are very high.
 
+- keychain for ssh key (or yubikey)
 - unlock luks root with usb device (storage or yubikey)
     - [about TPM unlock](https://blastrock.github.io/fde-tpm-sb.html)
 - external monitors in hyprland
-- keychain for ssh key (or yubikey)
 - build up from smaller (non-desktop) profile
 - telescope search icons in nvim for "disk" and see many squares and kanji
 - screenlocking and fingerprint reader
@@ -1323,7 +1328,6 @@ and USE flags of nvgen and flattop
   - remove/add driver module on demand?
 - `.utils/hypr_lid.sh` causes lockup
   - could be due to new hyprland version
-- i915 drm GSC proxy dmesg error (after aggressive kernel pruning)
 
 ## fixed
 
@@ -1361,15 +1365,8 @@ and USE flags of nvgen and flattop
   - plugging usb mouse ups it by 0.5W
   - intel EPP (tuned ebuild) package recommended (StarFighter Perplexity space)
 
-# thinktop
-
-## issues
-
-- add clipboard script to repo
-
 # install friction
 
-- ssh keys, proton passwords, wpa_supplicant, yubikeys, luks keyfiles
 - firmware and kernel savedconfigs
 - getting configs in place
     - portage configs
