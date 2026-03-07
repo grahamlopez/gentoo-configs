@@ -207,7 +207,7 @@ these are single-user systems with full disk encryption anyway.
 
   ```
   if [ "$(tty)" = "/dev/tty1" ]; then
-      exec dbus-run-session Hyprland
+      start-hyprland
   fi
   ```
 
@@ -1346,8 +1346,7 @@ and USE flags of nvgen and flattop
 
 ## issues
 
-- graphics, nouveau etc
-- hyprland opacity not working
+- add clipboard script to repo
 - sound sof firmware
 - firmeware bloatware
 
