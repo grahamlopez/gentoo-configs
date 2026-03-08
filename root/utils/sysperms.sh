@@ -6,8 +6,12 @@
 
 set -euo pipefail
 
+GIT_DIR="/root/.gentoo-configs"
+WORK_TREE="/"
+
 # FORMAT: "path:owner:group:mode"
 FILES=(
+    "/root/.README:root:root:0600"
     "/etc/portage/make.conf:root:root:0644"
     "/etc/hostname:root:root:0644"
     #"/etc/sudoers:root:root:0440"
@@ -16,11 +20,20 @@ FILES=(
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 NC='\033[0m'
 
 MODE="${1:---check}"
 ERRORS=0
 
+# Build a set of tracked paths from the FILES array
+declare -A TRACKED
+for entry in "${FILES[@]}"; do
+    IFS=':' read -r path _ _ _ <<< "$entry"
+    TRACKED["$path"]=1
+done
+
+# Check permissions on all listed files
 for entry in "${FILES[@]}"; do
     IFS=':' read -r path owner group mode <<< "$entry"
 
@@ -54,7 +67,7 @@ for entry in "${FILES[@]}"; do
         printf "${GREEN}OK${NC}       %s\n" "$path"
     else
         printf "${RED}MISMATCH${NC} %s%s\n" "$path" "$detail"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
 
         if [[ "$MODE" == "--fix" ]]; then
             chown "${owner}:${group}" "$path"
@@ -64,8 +77,29 @@ for entry in "${FILES[@]}"; do
     fi
 done
 
+# Check for repo files not in the FILES array
+UNTRACKED=0
+while IFS= read -r repo_file; do
+    if [[ -z "${TRACKED[$repo_file]+_}" ]]; then
+        if [[ $UNTRACKED -eq 0 ]]; then
+            printf "\n${YELLOW}Files in repo without permission entries:${NC}\n"
+        fi
+        cur_owner=$(stat -c '%U' "/$repo_file")
+        cur_group=$(stat -c '%G' "/$repo_file")
+        cur_mode=$(stat -c '%04a' "/$repo_file")
+        printf "${YELLOW}UNMANAGED${NC} /%s:%s:%s:%s${NC}\n" "$repo_file" "$cur_owner" "$cur_group" "$cur_mode"
+        UNTRACKED=$((UNTRACKED + 1))
+    fi
+done < <(git --git-dir="$GIT_DIR" --work-tree="$WORK_TREE" -C / ls-files)
+
+# Summary
+if [[ $UNTRACKED -gt 0 ]]; then
+    printf "\n%d file(s) in repo not listed in FILES array.\n" "$UNTRACKED"
+    ERRORS=$((ERRORS + UNTRACKED))
+fi
+
 if [[ $ERRORS -gt 0 && "$MODE" == "--check" ]]; then
-    printf "\n%d issue(s) found. Run with --fix to correct.\n" "$ERRORS"
+    printf "%d total issue(s) found. Run with --fix to correct permissions.\n" "$ERRORS"
     exit 1
 elif [[ $ERRORS -eq 0 ]]; then
     printf "\nAll files OK.\n"

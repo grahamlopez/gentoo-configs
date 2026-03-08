@@ -1,0 +1,64 @@
+For tracking and installing dotfiles. Using a bare git repo in a separate
+git-dir, as well as ignoring all untracked files so that no symlinks or similar
+are necessary.
+
+## Updates needed in this file
+
+- [ ] paths and aliases
+- [ ] explain about checkout/backup
+- [ ] explain about fixing permissions
+- [ ] copy `cpg` alias from startop
+
+
+## Initial repo setup:
+
+```
+git init --bare $HOME/.dots-git
+alias dgit='git --git-dir=$HOME/.dots-git/ --work-tree=$HOME'
+dgit config status.showUntrackedFiles no
+```
+
+## Usage
+
+Now any files in $HOME can be versioned as usual with things like:
+```
+dgit status
+dgit add .vimrc
+dgit commit -m 'add vimrc'
+dgit push
+```
+
+To see what files are being tracked:
+`dgit ls-tree --full-tree -r HEAD`
+or simply `dgit ls-files`
+
+
+## Install the dotfiles onto a new system
+
+```
+git clone --bare git@github.com:grahamlopez/dots $HOME/.dots-git
+dgit checkout
+```
+
+if there are already dotfiles present, then need to back them up and move out of
+the way and rerun `dgit checkout`
+
+
+## git configuration
+
+Sometimes, I have had to manually configure the repo after checkout;
+edit `.dots-git/config` and add the following:
+
+```
+[remote "origin"]
+        url = git@github.com:grahamlopez/dots.git
+        fetch = +refs/heads/*:refs/remotes/origin/*
+[status]
+        showUntrackedFiles = no
+
+```
+
+To change the remote e.g. from https: to git:
+```
+git remote set-url origin git@github.com/grahamlopez/dots.git
+```
