@@ -106,7 +106,7 @@ alias vimall="nvim **/*(.)"
 alias dgit='git --git-dir=$HOME/.dots-git/ --work-tree=$HOME' # dotfile management
 # for config file management
 function git() {
-  if [[ $(pwd) == ${HOME} || $(pwd) == /etc ]] ; then
+  if [[ $(pwd) == ${HOME} || $(pwd) == /etc || $(pwd) == /etc/portage ]] ; then
     command git --git-dir=$HOME/.gentoo-configs/ --work-tree=/ "$@"
   else
     command git "$@"

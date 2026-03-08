@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+# curl -fsSL https://proton.me/download/pass-cli/install.sh | bash   
+
 REPO="git@github.com:grahamlopez/gentoo-configs"
 GIT_DIR="/root/.gentoo-configs"
 #BRANCH="${1:-$(hostname)}"
