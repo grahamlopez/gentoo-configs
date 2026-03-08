@@ -1,0 +1,11 @@
+app-misc/cliphist
+app-misc/keyd
+app-text/zathura
+app-text/zathura-pdf-mupdf
+gui-apps/hyprpaper
+gui-apps/wl-clipboard
+gui-wm/hyprland
+media-gfx/feh
+sys-apps/xdg-desktop-portal-gtk
+www-client/firefox-bin
+x11-terms/kitty

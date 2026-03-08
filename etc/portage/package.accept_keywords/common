@@ -1,0 +1,47 @@
+sys-kernel/gentoo-kernel ~amd64
+sys-kernel/gentoo-sources ~amd64
+virtual/dist-kernel ~amd64
+app-misc/keyd ~amd64
+gui-wm/hyprland ~amd64
+gui-apps/hyprpaper ~amd64
+# required by gui-libs/hyprtoolkit-0.5.3::hyproverlay
+# required by gui-libs/hyprland-guiutils-0.2.1::hyproverlay
+# required by gui-wm/hyprland-0.54.1::hyproverlay[guiutils]
+# required by hyprland (argument)
+=dev-util/hyprwayland-scanner-0.4.5-r1 ~amd64
+# required by gui-apps/hyprpaper-0.8.3::hyproverlay
+# required by hyprpaper (argument)
+=gui-libs/hyprtoolkit-0.5.3 ~amd64
+# required by gui-wm/hyprland-0.54.1::hyproverlay[guiutils]
+# required by hyprland (argument)
+=gui-libs/hyprland-guiutils-0.2.1 ~amd64
+# required by gui-wm/hyprland-0.54.1::hyproverlay
+# required by hyprland (argument)
+=gui-libs/hyprutils-0.11.0 ~amd64
+# required by gui-wm/hyprland-0.54.1::hyproverlay
+# required by hyprland (argument)
+=dev-cpp/glaze-7.0.2 ~amd64
+# required by gui-wm/hyprland-0.54.1::hyproverlay
+# required by hyprland (argument)
+=dev-libs/hyprland-protocols-0.7.0 ~amd64
+# required by gui-wm/hyprland-0.54.1::hyproverlay
+# required by hyprland (argument)
+=gui-libs/hyprcursor-0.1.13-r1 ~amd64
+# required by gui-libs/hyprtoolkit-0.5.3::hyproverlay
+# required by gui-libs/hyprland-guiutils-0.2.1::hyproverlay
+# required by gui-wm/hyprland-0.54.1::hyproverlay[guiutils]
+# required by hyprland (argument)
+=gui-libs/aquamarine-0.10.0 ~amd64
+# required by gui-wm/hyprland-0.54.1::hyproverlay
+# required by hyprland (argument)
+=gui-libs/hyprwire-0.3.0 ~amd64
+# required by gui-libs/hyprtoolkit-0.5.3::hyproverlay
+# required by gui-libs/hyprland-guiutils-0.2.1::hyproverlay
+# required by gui-wm/hyprland-0.54.1::hyproverlay[guiutils]
+# required by hyprland (argument)
+=dev-libs/hyprgraphics-0.5.0-r1 ~amd64
+# required by gui-wm/hyprland-0.54.1::hyproverlay
+# required by hyprland (argument)
+=dev-libs/hyprlang-0.6.8 ~amd64
+# required by cliphist (argument)
+=app-misc/cliphist-0.7.0 ~amd64
