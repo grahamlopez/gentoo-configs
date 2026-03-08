@@ -5,7 +5,6 @@
 INTEL_PSTATE_DIR=/sys/devices/system/cpu/intel_pstate
 WIFI_IFACE="wlp1s0"
 NVME_DEVS="nvme0 nvme1"
-AC_PATH="/sys/class/power_supply/ADP1"
 BAT0="/sys/class/power_supply/BAT0"
 BAT1="/sys/class/power_supply/BAT1"
 STATE_DIR="/tmp/power-profile"
@@ -14,6 +13,13 @@ STATE_FILE="$STATE_DIR/battery_since"   # written by power-profile switcher
 # ── data helpers (no output) ─────────────────────────────────────────────────
 
 hr() { printf '%s\n' "----------------------------------------"; }
+
+detect_ac() {
+  for d in /sys/class/power_supply/*; do
+    [ -d "$d" ] || continue
+    [ "$(cat "$d/type" 2>/dev/null)" = "Mains" ] && echo "$d" && return
+  done
+}
 
 detect_bat() {
   if   [ -d "$BAT0" ]; then echo "BAT0"
@@ -121,7 +127,8 @@ cur_pct=""
 
 # AC / Battery
 ac_state=""
-if [ -r "$AC_PATH/online" ]; then
+AC_PATH=$(detect_ac)
+if [ -n "$AC_PATH" ] && [ -r "$AC_PATH/online" ]; then
   if [ "$(cat "$AC_PATH/online")" = "1" ]; then
     ac_state="online";  cur_mode="ac"
   else
