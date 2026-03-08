@@ -1,0 +1,66 @@
+[user]
+    name = Graham Lopez
+    email = m477@duck.com
+
+[color]
+    ui = auto
+[color "decorate"]
+    remoteBranch = green
+[color "branch"]
+    current = red
+    local = yellow
+    remote = green
+    upstream = bold cyan
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red bold
+    new = green bold
+[color "status"]
+    added = yellow
+    changed = green
+    untracked = cyan
+
+[color]
+    ui = true
+[color "diff"]
+    whitespace = red reverse
+[core]
+    whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
+    pager = less -RMFX
+    excludesFile = ~/.gitignore
+
+[alias]
+    please = push --force-with-lease
+    s = status -s
+    st = status
+    ci = commit
+    br = branch
+    co = checkout
+    lognames = log --name-status
+    logdiff = log -p --stat
+    loot = log --graph --decorate --oneline --date-order --all
+    lot = log --graph --decorate --oneline --date-order --branches
+    loo = log --graph --decorate --oneline --all
+    lo = log --graph --decorate --oneline --branches
+    lt = log --graph --decorate --oneline --date-order
+    l = log --graph --decorate --oneline
+    ls = ls-files
+    sh = remote show origin
+    rollback = checkout --
+    lg1 = log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)' --all
+    lg2 = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(auto)%d%C(reset)%n'' %%C(white)%s%C(reset) %C(dim white)- %an%C(reset)' --all
+    lg = !git lg1
+    cp = cherry-pick
+
+[push]
+    default = simple
+
+[credential]
+    helper = netrc -f ~/.netrc.gpg -v
+
+[merge]
+	tool = vimdiff
+	conflictstyle = diff3
+[mergetool]
+	prompt = false
