@@ -103,16 +103,22 @@ alias tmux="tmux -2"
 alias vimall="nvim **/*(.)"
 
 # shortcuts
-alias dgit='git --git-dir=$HOME/.dots-git/ --work-tree=$HOME' # dotfile management
+alias dgit='git --git-dir=$HOME/.gentoo-configs/ --work-tree=/ -C /' # dotfile management
 # for config file management
 function git() {
   if [[ $(pwd) == ${HOME} || $(pwd) == /etc || $(pwd) == /etc/portage ]] ; then
-    command git --git-dir=$HOME/.gentoo-configs/ --work-tree=/ "$@"
+    command git --git-dir=$HOME/.gentoo-configs/ --work-tree=/ -C / "$@"
   else
     command git "$@"
   fi
 }
 
+cpg() {
+  # last argument is the destination
+  dst="${@: -1}"
+  cp "$@"
+  chown -R graham:graham "$dst"
+}
 
 function brightness_set () {
   local max val backpath

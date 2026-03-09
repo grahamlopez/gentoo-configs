@@ -11,9 +11,41 @@ WORK_TREE="/"
 
 # FORMAT: "path:owner:group:mode"
 FILES=(
-    "/root/.README:root:root:0600"
-    "/etc/portage/make.conf:root:root:0644"
     "/etc/hostname:root:root:0644"
+    "/etc/hosts:root:root:0600"
+    "/etc/keyd/default.conf:root:root:0600"
+    "/etc/modprobe.d/blacklist-nouveau.conf:root:root:0600"
+    "/etc/portage/make.conf:root:root:0644"
+    "/etc/portage/package.accept_keywords/common:root:root:0600"
+    "/etc/portage/sets/early_install:root:root:0600"
+    "/etc/portage/sets/hyprland_env:root:root:0600"
+    "/etc/portage/sets/optionals:root:root:0600"
+    "/etc/systemd/system/getty@tty1.service.d/override.conf:root:root:0600"
+    "/etc/vconsole.conf:root:root:0600"
+    "/root/.README:root:root:0600"
+    "/root/.config/nvim/after/ftplugin/markdown.lua:root:root:0600"
+    "/root/.config/nvim/init.lua:root:root:0600"
+    "/root/.config/nvim/queries/markdown/highlights.scm:root:root:0600"
+    "/root/.dir_colors:root:root:0600"
+    "/root/.gitconfig:root:root:0600"
+    "/root/.tmux.conf:root:root:0600"
+    "/root/.vimrc:root:root:0600"
+    "/root/.zsh/completion/_conda:root:root:0600"
+    "/root/.zsh/completion/_docker:root:root:0600"
+    "/root/.zsh/completion/_lxc:root:root:0600"
+    "/root/.zsh/completion/_task:root:root:0600"
+    "/root/.zsh/git-prompt.sh:root:root:0600"
+    "/root/.zshrc:root:root:0600"
+    "/root/utils/enter_chroot.sh:root:root:0700"
+    "/root/utils/fix_file_perms.sh:root:root:0700"
+    "/root/utils/gentoo_configs_bootstrap.sh:root:root:0700"
+    "/usr/local/sbin/build_static_utils.sh:root:root:0700"
+    "/usr/local/sbin/create-system-report.sh:root:root:0700"
+    "/usr/local/sbin/dmesg_gaps.sh:root:root:0700"
+    "/usr/local/sbin/powertop-tunables.sh:root:root:0700"
+    "/usr/local/sbin/set-power-profile.sh:root:root:0700"
+    "/usr/local/sbin/show-power-status.sh:root:root:0700"
+    "/usr/share/keymaps/i386/qwerty/us-caps.map.gz:root:root:0600"
     #"/etc/sudoers:root:root:0440"
     # Add more entries as needed
 )
@@ -80,7 +112,7 @@ done
 # Check for repo files not in the FILES array
 UNTRACKED=0
 while IFS= read -r repo_file; do
-    if [[ -z "${TRACKED[$repo_file]+_}" ]]; then
+    if [[ -z "${TRACKED[/$repo_file]+_}" ]]; then
         if [[ $UNTRACKED -eq 0 ]]; then
             printf "\n${YELLOW}Files in repo without permission entries:${NC}\n"
         fi

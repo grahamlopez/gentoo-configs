@@ -48,7 +48,7 @@ dgit checkout
 utils/fix_file_perms.sh
 ```
 
-if there are already dotfiles present, then need to back them up and move out of
+If there are already dotfiles present, then need to back them up and move out of
 the way and rerun `dgit checkout` (use the bootstrap script)
 
 

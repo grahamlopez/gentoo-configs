@@ -1,28 +1,40 @@
 #!/bin/bash
 set -euo pipefail
 
-# curl -fsSL https://proton.me/download/pass-cli/install.sh | bash   
-
 REPO="git@github.com:grahamlopez/gentoo-configs"
 GIT_DIR="/root/.gentoo-configs"
-#BRANCH="${1:-$(hostname)}"
 BRANCH="main"
+BACKUP_DIR="/root/config_backups"
 
 git clone --bare "$REPO" "$GIT_DIR"
 
-_sys() { git --git-dir="$GIT_DIR" --work-tree=/ "$@"; }
+_sys() { git --git-dir="$GIT_DIR" --work-tree=/ -C / "$@"; }
 
 _sys config --local status.showUntrackedFiles no
 
-# Back up conflicts, then checkout
-if ! _sys checkout "$BRANCH" 2>/dev/null; then
-    _sys checkout "$BRANCH" 2>&1 | grep "^\t" | awk '{print $1}' | \
-        while read -r f; do
-            mkdir -p "$GIT_DIR-backup/$(dirname "$f")"
-            mv "/$f" "$GIT_DIR-backup/$f"
-        done
-    _sys checkout "$BRANCH"
+echo "Cloned bare repo to $GIT_DIR"
+
+# Try a simple checkout first
+if _sys checkout "$BRANCH"; then
+    echo "Checked out branch '$BRANCH' with no conflicts."
+    exit 0
 fi
 
-echo "Checked out branch '$BRANCH'. Conflicts backed up to ${GIT_DIR}-backup/"
+# If we got here, there were conflicts
+echo "Conflicts detected, backing up and retrying checkout..."
+
+# Capture the conflict list
+CONFLICT_LIST=$(_sys checkout "$BRANCH" 2>&1 | sed -n 's/^[[:space:]]\+//p' || true)
+
+while IFS= read -r f; do
+    case "$f" in
+        The*|error:*|Please*|Aborting*|"") continue ;;
+    esac
+    echo "  backing up /$f -> $BACKUP_DIR/$f"
+    mkdir -p "$BACKUP_DIR/$(dirname "$f")"
+    mv "/$f" "$BACKUP_DIR/$f"
+done <<< "$CONFLICT_LIST"
+
+_sys checkout "$BRANCH"
+echo "Checked out branch '$BRANCH'. Conflicts backed up to $BACKUP_DIR/"
 
