@@ -10,8 +10,8 @@ are necessary.
 2. Git doesn't handle permissions well, so fix them with the helper script
 
 TODOs
-- copy `cpg` alias from startop
-- add power profile systemd and udev helpers from startop
+- somewhere the enable/reset commands are needed for the power profiles and udev rules
+- make all scripts in /usr/local/sbin generic to /sys, wifi, nvme names on different machines
 
 
 ## Initial repo setup:

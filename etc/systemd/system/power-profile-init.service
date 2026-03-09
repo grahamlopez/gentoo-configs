@@ -1,0 +1,17 @@
+[Unit]
+Description=Set initial power profile based on AC state
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c '\
+  AC_DIR=/sys/class/power_supply/ADP1; \
+  if [ -r "$AC_DIR/online" ] && [ "$(cat "$AC_DIR/online")" = "1" ]; then \
+    /usr/local/sbin/set-power-profile.sh ac; \
+  else \
+    /usr/local/sbin/set-power-profile.sh battery; \
+  fi'
+ExecStart=/usr/local/sbin/powertop-tunables.sh
+
+[Install]
+WantedBy=multi-user.target

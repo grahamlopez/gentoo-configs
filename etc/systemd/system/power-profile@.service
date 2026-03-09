@@ -1,0 +1,7 @@
+[Unit]
+Description=Set power profile: %I
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/set-power-profile.sh %I
