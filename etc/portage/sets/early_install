@@ -9,6 +9,7 @@ app-shells/fzf
 app-shells/gentoo-bashcomp
 app-shells/gentoo-zsh-completions
 app-shells/zsh
+app-text/tree
 dev-vcs/git
 net-misc/dhcpcd
 net-wireless/iw
