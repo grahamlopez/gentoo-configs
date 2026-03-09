@@ -10,10 +10,29 @@ are necessary.
 2. Git doesn't handle permissions well, so fix them with the helper script
 
 TODOs
-- somewhere the enable/reset commands are needed for the power profiles and udev rules
 - make all scripts in /usr/local/sbin generic to /sys, wifi, nvme names on different machines
+- set up machine variants
+  - make.conf microcode
+  - firmware savedconfig
+  - modprobe.d blacklists
+  - gpu control
+    - /etc/udev/rules.d
+    - /etc/tmpfiles.d
+- migrate docs to this repo
 
+##########################
+### AFTER INSTALLATION ###
+##########################
 
+- [ ] Fix permissions with utils/ fix permissions script
+- [ ] Trim systemd services with utils/ systemd trim script
+- [ ] Enable systemd services:
+      - power-profile-init.service
+ 
+##########################
+### SETUP INSTRUCTIONS ###
+##########################
+ 
 ## Initial repo setup:
 
 ```
