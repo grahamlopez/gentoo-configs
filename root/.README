@@ -21,6 +21,7 @@ TODOs
     - /etc/udev/rules.d
     - /etc/tmpfiles.d
 - migrate docs to this repo
+- split out /etc/portage/make.conf with host-specific includes
 
 ##########################
 ### AFTER INSTALLATION ###
