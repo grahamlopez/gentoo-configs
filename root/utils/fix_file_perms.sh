@@ -17,6 +17,7 @@ FILES=(
     "/etc/modprobe.d/blacklist-nouveau.conf:root:root:0644"
     "/etc/portage/make.conf:root:root:0644"
     "/etc/portage/package.accept_keywords/common:root:root:0644"
+    "/etc/portage/package.use/common:root:root:0644"
     "/etc/portage/sets/early_install:root:root:0644"
     "/etc/portage/sets/hyprland_env:root:root:0644"
     "/etc/portage/sets/optionals:root:root:0644"
