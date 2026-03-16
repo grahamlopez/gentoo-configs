@@ -10,7 +10,9 @@ are necessary.
 2. Git doesn't handle permissions well, so fix them with the helper script
 
 TODOs
+- transplant lily58 key setup to keyd.conf
 - make all scripts in /usr/local/sbin generic to /sys, wifi, nvme names on different machines
+- show-power-status.sh to account for suspends (e.g. time on battery)
 - set up machine variants
   - make.conf microcode
   - firmware savedconfig
