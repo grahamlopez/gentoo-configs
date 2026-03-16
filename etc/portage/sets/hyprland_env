@@ -5,6 +5,7 @@ app-text/zathura-pdf-mupdf
 gui-apps/hyprpaper
 gui-apps/wl-clipboard
 gui-wm/hyprland
+media-fonts/unifont
 media-gfx/feh
 sys-apps/xdg-desktop-portal-gtk
 www-client/firefox-bin
