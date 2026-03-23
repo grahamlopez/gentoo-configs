@@ -43,6 +43,7 @@ FILES=(
     "/root/utils/enter_chroot.sh:root:root:0700"
     "/root/utils/fix_file_perms.sh:root:root:0700"
     "/root/utils/gentoo_configs_bootstrap.sh:root:root:0700"
+    "/root/utils/get_stage3.sh:root:root:0700"
     "/root/utils/trim_systemd_services.sh:root:root:0700"
     "/usr/local/sbin/build_static_utils.sh:root:root:0755"
     "/usr/local/sbin/create-system-report.sh:root:root:0755"
