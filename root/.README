@@ -73,6 +73,11 @@ utils/fix_file_perms.sh
 If there are already dotfiles present, then need to back them up and move out of
 the way and rerun `dgit checkout` (use the bootstrap script)
 
+One can also create a bare repo from a normally-cloned one
+```
+git clone --bare /path/to/existing/repo /path/to/new-bare-repo.git
+```
+
 
 ## git configuration
 
