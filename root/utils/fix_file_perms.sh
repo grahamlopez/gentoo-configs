@@ -52,6 +52,7 @@ FILES=(
     "/usr/local/sbin/dmesg_gaps.sh:root:root:0755"
     "/usr/local/sbin/gpu-fan-control.sh:root:root:0755"
     "/usr/local/sbin/powertop-tunables.sh:root:root:0755"
+    "/usr/local/sbin/poke-fan.sh:root:root:0755"
     "/usr/local/sbin/set-power-profile.sh:root:root:0755"
     "/usr/local/sbin/show-power-status.sh:root:root:0755"
     "/usr/share/keymaps/i386/qwerty/us-caps.map.gz:root:root:0644"
