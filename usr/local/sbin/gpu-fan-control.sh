@@ -19,9 +19,10 @@
 # 3. Every 3 seconds, reads the highest NVIDIA GPU temperature from nvidia-smi.
 # 4. Interpolates a PWM value from the fan curve (40°C→30%, linear ramp up to
 #    85°C→100%).
-# 5. Writes the new PWM value to both fans, but only if it changed since the last
-#    cycle (avoids unnecessary Super I/O writes).
-# 6. Logs each change with timestamp, temp source, and PWM percentage.
+# 5. Writes the new PWM value to both fans only when the requested change is large
+#    enough, reducing fan hunting, journal noise, and unnecessary Super I/O writes.
+# 6. Logs state changes by default; per-adjustment logging is available in verbose
+#    mode.
 #
 # Fallback chain for temperature reads:
 # - Primary: GPU temp via nvidia-smi
@@ -40,6 +41,8 @@ INTERVAL=3            # seconds between updates
 HWMON_RETRIES=10      # tolerate hwmon appearance races at startup
 HWMON_RETRY_DELAY=1   # seconds between hwmon lookup attempts
 CONTROLLED_PWM_IDS=(2 3)
+PWM_CHANGE_THRESHOLD=${PWM_CHANGE_THRESHOLD:-8}   # minimum absolute PWM delta before applying a change
+VERBOSE_LOGGING=${VERBOSE_LOGGING:-0}             # 1=log every applied PWM update, 0=state changes only
 
 # Fan curve: GPU_TEMP -> PWM (0-255)
 # Tuned for RTX PRO 6000 Ada (300W TDP)
@@ -57,6 +60,19 @@ CURVE_PWMS=(77 102 128 166 204 255)
 
 # Minimum PWM the fans will reliably spin at (don't go below this)
 MIN_PWM=60
+
+log_info() {
+    echo "$(date '+%H:%M:%S') [info] $*"
+}
+
+log_warn() {
+    echo "$(date '+%H:%M:%S') [warn] $*" >&2
+}
+
+log_verbose() {
+    (( VERBOSE_LOGGING )) || return 0
+    log_info "$@"
+}
 
 find_hwmon() {
     local target="$1"
@@ -100,7 +116,7 @@ restore_case_fans_to_bios() {
     local pwm_id
 
     it8688=$(find_hwmon "it8688") || {
-        echo "WARNING: hwmon device 'it8688' not found; nothing to restore" >&2
+        log_warn "hwmon device 'it8688' not found; nothing to restore"
         return 0
     }
 
@@ -143,9 +159,9 @@ restore_bios_control() {
     fi
 
     RESTORED=1
-    echo "Restoring BIOS SmartFan control on case fans..."
+    log_info "Restoring BIOS SmartFan control on case fans..."
     restore_case_fans_to_bios
-    echo "Done. Exiting."
+    log_info "Done. Exiting."
 }
 
 handle_exit_signal() {
@@ -165,7 +181,7 @@ for i in "${!CASE_FANS[@]}"; do
     fi
     echo 1 > "${pwm}_enable"
     echo "$MIN_PWM" > "$pwm"
-    echo "Took manual control of ${CASE_FAN_NAMES[$i]}"
+    log_info "Took manual control of ${CASE_FAN_NAMES[$i]}"
 done
 
 # --- Interpolate fan curve ---
@@ -233,13 +249,14 @@ get_cpu_temp() {
 
 # --- Main loop ---
 
-echo "gpu-fan-control started (interval=${INTERVAL}s)"
-echo "Fan curve: ${CURVE_TEMPS[*]} °C -> ${CURVE_PWMS[*]} PWM"
-
-echo "Monitoring highest available NVIDIA GPU temperature"
+log_info "gpu-fan-control started (interval=${INTERVAL}s)"
+log_info "Fan curve: ${CURVE_TEMPS[*]} °C -> ${CURVE_PWMS[*]} PWM"
+log_info "Monitoring highest available NVIDIA GPU temperature"
+log_info "PWM change threshold: ${PWM_CHANGE_THRESHOLD}; verbose logging: ${VERBOSE_LOGGING}"
 
 FAILSAFE_COUNT=0
-LAST_PWM=0
+LAST_PWM=$MIN_PWM
+LAST_TEMP_SOURCE=""
 
 while true; do
     gpu_temp=$(get_gpu_temp) || gpu_temp=""
@@ -266,6 +283,15 @@ while true; do
         fi
     fi
 
+    if [ "$temp_source" != "$LAST_TEMP_SOURCE" ]; then
+        if [ -n "$LAST_TEMP_SOURCE" ]; then
+            log_info "Temperature source changed: ${LAST_TEMP_SOURCE} -> ${temp_source} (${drive_temp}°C)"
+        else
+            log_info "Temperature source: ${temp_source} (${drive_temp}°C)"
+        fi
+        LAST_TEMP_SOURCE="$temp_source"
+    fi
+
     target_pwm=$(interpolate_pwm "$drive_temp")
 
     # Enforce minimum
@@ -273,12 +299,14 @@ while true; do
         target_pwm=$MIN_PWM
     fi
 
-    # Only write if changed (reduce I/O writes to the Super I/O)
-    if (( target_pwm != LAST_PWM )); then
+    pwm_delta=$(( target_pwm > LAST_PWM ? target_pwm - LAST_PWM : LAST_PWM - target_pwm ))
+
+    # Only write when the requested change is large enough.
+    if (( pwm_delta >= PWM_CHANGE_THRESHOLD )); then
         for pwm in "${CASE_FANS[@]}"; do
             echo "$target_pwm" > "$pwm"
         done
-        echo "$(date '+%H:%M:%S') ${temp_source}=${drive_temp}°C -> PWM=${target_pwm}/255 ($(( target_pwm * 100 / 255 ))%)"
+        log_verbose "${temp_source}=${drive_temp}°C -> PWM=${target_pwm}/255 ($(( target_pwm * 100 / 255 ))%)"
         LAST_PWM=$target_pwm
     fi
 
