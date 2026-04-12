@@ -15,6 +15,8 @@ FILES=(
     "/etc/hosts:root:root:0644"
     "/etc/keyd/default.conf:root:root:0644"
     "/etc/modprobe.d/blacklist-nouveau.conf:root:root:0644"
+    "/etc/modprobe.d/it87.conf:root:root:0644"
+    "/etc/modprobe.d/nvidia.conf:root:root:0644"
     "/etc/portage/make.conf:root:root:0644"
     "/etc/portage/package.accept_keywords/common:root:root:0644"
     "/etc/portage/package.use/common:root:root:0644"
@@ -48,12 +50,15 @@ FILES=(
     "/usr/local/sbin/build_static_utils.sh:root:root:0755"
     "/usr/local/sbin/create-system-report.sh:root:root:0755"
     "/usr/local/sbin/dmesg_gaps.sh:root:root:0755"
+    "/usr/local/sbin/gpu-fan-control.sh:root:root:0755"
     "/usr/local/sbin/powertop-tunables.sh:root:root:0755"
     "/usr/local/sbin/set-power-profile.sh:root:root:0755"
     "/usr/local/sbin/show-power-status.sh:root:root:0755"
     "/usr/share/keymaps/i386/qwerty/us-caps.map.gz:root:root:0644"
     #"/etc/sudoers:root:root:0440"
     # Add more entries as needed
+    # o without permission entries:
+
 )
 
 RED='\033[0;31m'
