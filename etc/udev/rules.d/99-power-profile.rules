@@ -1,5 +1,10 @@
-SUBSYSTEM=="power_supply", KERNEL=="ADP1", ATTR{online}=="1", \
-  RUN+="/usr/bin/systemctl start power-profile@ac.service"
+# Some hardware (e.g. USB-C PD) emits change uevents only on the Battery
+# device when charging starts/stops — never on the Mains device — even though
+# /sys/class/power_supply/<Mains>/online is updated. So fire on either event
+# type and let set-power-profile.sh's auto mode inspect the live Mains state.
 
-SUBSYSTEM=="power_supply", KERNEL=="ADP1", ATTR{online}=="0", \
-  RUN+="/usr/bin/systemctl start power-profile@battery.service"
+SUBSYSTEM=="power_supply", ACTION=="change", ENV{POWER_SUPPLY_TYPE}=="Battery", \
+  RUN+="/usr/bin/systemctl start power-profile@auto.service"
+
+SUBSYSTEM=="power_supply", ACTION=="change", ENV{POWER_SUPPLY_TYPE}=="Mains", \
+  RUN+="/usr/bin/systemctl start power-profile@auto.service"

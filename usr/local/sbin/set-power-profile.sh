@@ -19,6 +19,18 @@ detect_bat() {
   fi
 }
 
+# True iff any power_supply of type=Mains is online. Some hardware (e.g. USB-C
+# PD) updates Mains/online without firing a uevent on the Mains device, so
+# callers should rely on this sysfs read rather than the originating event.
+ac_is_online() {
+  for d in /sys/class/power_supply/*; do
+    [ -d "$d" ] || continue
+    [ "$(cat "$d/type" 2>/dev/null)" = "Mains" ] || continue
+    [ "$(cat "$d/online" 2>/dev/null)" = "1" ] && return 0
+  done
+  return 1
+}
+
 start_battery_session() {
   bat=$(detect_bat)
   cur_pct=$(cat "/sys/class/power_supply/$bat/capacity" 2>/dev/null)
@@ -99,8 +111,15 @@ case "$1" in
     set_epp_all balance_performance
     reset_battery_session
     ;;
+  auto)
+    if ac_is_online; then
+      exec "$0" ac
+    else
+      exec "$0" battery
+    fi
+    ;;
   *)
-    echo "Usage: $0 ac|battery" >&2
+    echo "Usage: $0 ac|battery|auto" >&2
     exit 1
     ;;
 esac
