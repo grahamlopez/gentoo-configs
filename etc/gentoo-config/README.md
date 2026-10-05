@@ -17,4 +17,5 @@ document that limitation before introducing generation, copying, or symlinks.
 
 The supported initial host names are `generic`, `qemu`, and `thinktop`.
 `target-host` is intentionally local state rather than a tracked file because
-its value differs between installations.
+its value differs between installations. It contains the Portage-compatible
+assignment `GENTOO_TARGET_HOST="name"` so `make.conf` can source it directly.
