@@ -1,0 +1,2 @@
+# The generic target deliberately adds no CPU, graphics, memory, or concurrency
+# assumptions to the universal configuration.

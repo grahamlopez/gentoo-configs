@@ -1,16 +1,16 @@
-app-misc/evtest                       for debugging keyboard events
-dev-tex/tectonic                      self-contained xelatex-based latex
-dev-vcs/lazygit                       git tui application
-media-fonts/dejavu                    a common font that I don't use much
-media-fonts/fira-code                 a decent font that I don't use much
-media-fonts/fira-mono                 a decent font that I don't use much
-media-fonts/noto-cjk                  for things shrug and table flip emoji
-media-fonts/noto-emoji                emoji font
-media-video/ffmpeg                    to enable tidal playback in firefox
-net-libs/nodejs                       neovim dependency
-net-misc/rclone                       easily mount pcloud
-net-p2p/syncthing                     automatic file syncing - replace dropbox
-sys-firmware/sof-firmware             (nvgen only - needed for sound card)
-sys-fs/ncdu                           fast interactive disk cleanup
-x11-apps/xev                          another input event viewer
-x11-misc/pywal16                      generate colorschemes from an image
+app-misc/evtest # debugging keyboard events
+dev-tex/tectonic # self-contained XeLaTeX-based TeX
+dev-vcs/lazygit # Git terminal interface
+media-fonts/dejavu # general-purpose font family
+media-fonts/fira-code # coding font with ligatures
+media-fonts/fira-mono # monospaced font
+media-fonts/noto-cjk # CJK and broad Unicode coverage
+media-fonts/noto-emoji # emoji font
+media-video/ffmpeg # browser media playback support
+net-libs/nodejs # Neovim dependency
+net-misc/rclone # remote-storage mounts
+net-p2p/syncthing # automatic file synchronization
+sys-firmware/sof-firmware # sound firmware on targets that require it
+sys-fs/ncdu # interactive disk-usage inspection
+x11-apps/xev # X input-event inspection
+x11-misc/pywal16 # generate color schemes from an image

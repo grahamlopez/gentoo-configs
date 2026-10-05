@@ -1,0 +1,12 @@
+# Intel Core Ultra 7 255H (Arrow Lake), 16 logical CPUs, 62 GiB RAM.
+COMMON_FLAGS="-march=arrowlake -O2 -pipe"
+CFLAGS="${COMMON_FLAGS}"
+CXXFLAGS="${COMMON_FLAGS}"
+FCFLAGS="${COMMON_FLAGS}"
+FFLAGS="${COMMON_FLAGS}"
+RUSTFLAGS="${RUSTFLAGS} -C target-cpu=arrowlake"
+
+PORTAGE_TMPDIR="/dev/shm"
+PORTAGE_TMPFS="/dev/shm"
+MAKEOPTS="-j12"
+VIDEO_CARDS="intel"
