@@ -1,0 +1,3 @@
+# Broad fallback firmware is installed for every target. SOF audio DSP firmware
+# is an additional target requirement, enabled by a selected host fragment.
+SOF_FIRMWARE=no
