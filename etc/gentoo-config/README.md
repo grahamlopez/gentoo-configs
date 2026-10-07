@@ -15,7 +15,9 @@ Prefer native fragment, include, matching, and drop-in mechanisms. If a future
 configuration format cannot express a common layer plus a selected host layer,
 document that limitation before introducing generation, copying, or symlinks.
 
-The supported initial host names are `generic`, `qemu`, and `thinktop`.
+The supported initial host names are `generic`, `qemu`, `thinktop`, and `startop`.
+Startop currently uses universal compilation settings; the installer prints
+its EFI registration command with the full device path required by its firmware.
 `target-host` is intentionally local state rather than a tracked file because
 its value differs between installations. It contains the Portage-compatible
 assignment `GENTOO_TARGET_HOST="name"` so `make.conf` can source it directly.
